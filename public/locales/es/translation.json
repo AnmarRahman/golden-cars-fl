@@ -4,6 +4,15 @@
     "subtitle": "Su destino principal para vehículos de lujo y alto rendimiento en Tampa, FL. Descubra el coche de sus sueños hoy.",
     "explore_inventory": "Explorar Nuestro Inventario"
   },
+  "services": {
+    "title": "Nuestros Servicios Especializados",
+    "wholesale_title": "Compras al Por Mayor",
+    "wholesale_description": "Ofrecemos precios competitivos para compras de vehículos al por mayor, ideal para concesionarios y compradores a gran escala. Procesos optimizados para transacciones eficientes.",
+    "export_title": "Exportación Internacional",
+    "export_description": "Especializados en la exportación de vehículos a Centroamérica, Sudamérica y los EAU. Nos encargamos de toda la documentación y logística de envío.",
+    "logistics_title": "Logística Global",
+    "logistics_description": "Soporte logístico integral para el transporte de vehículos en todo el mundo. Garantizando una entrega segura y a tiempo a su destino deseado."
+  },
   "about_us": {
     "title": "Acerca de Golden Cars FL",
     "description": "En Golden Cars FL, nos enorgullecemos de ofrecer una selección inigualable de vehículos usados de alta calidad. Nuestro compromiso con la satisfacción del cliente, precios transparentes y una experiencia de compra sin problemas nos distingue. Visítenos hoy y deje que nuestro equipo de expertos le ayude a encontrar el coche perfecto que se adapte a su estilo de vida y presupuesto."
@@ -15,20 +24,20 @@
     "failed_to_load_cars": "No se pudieron cargar los coches. Por favor, inténtelo de nuevo.",
     "no_cars_found": "No se encontraron coches que coincidan con sus criterios.",
     "year": "Año",
-    "mileage": "Kilometraje",
+    "mileage": "Odómetro",
     "vin": "VIN",
     "call_for_price": "Llamar para Precio",
     "view_details": "Ver Detalles",
-    "enquire_now": "Consultar Ahora"
+    "inquire_now": "Consultar Ahora"
   },
   "search_form": {
     "search_by_name_keyword": "Buscar por Nombre/Palabra Clave",
     "placeholder_name_keyword": "ej., Honda Civic, SUV",
     "model_year": "Año del Modelo",
     "any_year": "Cualquier Año",
-    "min_mileage": "Kilometraje Mínimo",
+    "min_mileage": "Odómetro Mínimo",
     "placeholder_min_mileage": "ej., 10000",
-    "max_mileage": "Kilometraje Máximo",
+    "max_mileage": "Odómetro Máximo",
     "placeholder_max_mileage": "ej., 50000",
     "vin": "VIN",
     "placeholder_vin": "ej., VIN de 17 dígitos",
@@ -43,7 +52,7 @@
     "not_available": "Detalles del coche no disponibles.",
     "description": "Descripción"
   },
-  "enquire_page": {
+  "inquire_page": {
     "car_not_found_title": "Coche No Encontrado",
     "car_not_found_description": "El coche que busca no existe o ha sido eliminado.",
     "title": "Consultar Sobre {{carName}}",
@@ -58,7 +67,7 @@
     "placeholder_phone_number": "(123) 456-7890",
     "message": "Mensaje",
     "placeholder_message": "Su mensaje aquí...",
-    "submit_enquiry": "Enviar Consulta"
+    "submit_inquiry": "Enviar Consulta"
   },
   "contact_page": {
     "title": "Contáctenos",
@@ -91,9 +100,9 @@
       "description": "Introduzca los detalles de un nuevo coche para añadirlo a su inventario.",
       "car_name": "Nombre del Coche",
       "placeholder_car_name": "ej., 2023 Honda Civic",
-      "image_url": "URL de la Imagen",
-      "placeholder_image_url": "https://ejemplo.com/coche.jpg",
-      "mileage": "Kilometraje",
+      "image_files": "Archivos de Imagen",
+      "placeholder_image_files": "Subir una o más imágenes",
+      "mileage": "Odómetro",
       "placeholder_mileage": "ej., 15000",
       "vin": "VIN",
       "placeholder_vin": "VIN de 17 dígitos",
@@ -117,7 +126,7 @@
       "description": "Ver y eliminar coches existentes en su inventario.",
       "table_image": "Imagen",
       "table_name": "Nombre",
-      "table_mileage": "Kilometraje",
+      "table_mileage": "Odómetro",
       "table_year": "Año",
       "table_price": "Precio",
       "table_vin": "VIN",
@@ -132,17 +141,17 @@
       "table_views": "Vistas",
       "no_view_data": "No hay datos de visitas disponibles aún."
     },
-    "user_enquiries": {
+    "user_inquiries": {
       "title": "Consultas de Usuarios",
       "description": "Todas las consultas enviadas por clientes potenciales.",
       "table_name": "Nombre",
       "table_email": "Correo Electrónico",
       "table_phone": "Teléfono",
-      "table_car_enquired": "Coche Consultado",
+      "table_car_inquired": "Coche Consultado",
       "table_date": "Fecha",
       "table_message": "Mensaje",
       "car_deleted": "Coche Eliminado",
-      "no_enquiries": "No hay consultas enviadas aún."
+      "no_inquiries": "No hay consultas enviadas aún."
     }
   },
   "footer": {
@@ -157,6 +166,7 @@
     "friday": "Viernes: 8:30 AM–6 PM",
     "saturday": "Sábado: 9 AM–5 PM",
     "sunday": "Domingo: Cerrado",
-    "phone_number": "Número de Teléfono:"
+    "phone_number": "Número de Teléfono:",
+    "email": "Correo Electrónico:"
   }
 }

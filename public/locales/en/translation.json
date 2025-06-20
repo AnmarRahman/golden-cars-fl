@@ -4,6 +4,15 @@
     "subtitle": "Your premier destination for luxury and performance vehicles in Tampa, FL. Discover your dream car today.",
     "explore_inventory": "Explore Our Inventory"
   },
+  "services": {
+    "title": "Our Specialized Services",
+    "wholesale_title": "Wholesale Purchases",
+    "wholesale_description": "We offer competitive pricing for bulk vehicle purchases, ideal for dealerships and large-scale buyers. Streamlined processes for efficient transactions.",
+    "export_title": "International Export",
+    "export_description": "Specializing in vehicle exports to Central America, South America, and the UAE. We handle all documentation and shipping logistics.",
+    "logistics_title": "Global Logistics",
+    "logistics_description": "Comprehensive logistics support for vehicle transportation worldwide. Ensuring safe and timely delivery to your desired destination."
+  },
   "about_us": {
     "title": "About Golden Cars FL",
     "description": "At Golden Cars FL, we pride ourselves on offering an unparalleled selection of high-quality pre-owned vehicles. Our commitment to customer satisfaction, transparent pricing, and a seamless buying experience sets us apart. Visit us today and let our expert team help you find the perfect car that fits your lifestyle and budget."
@@ -19,7 +28,7 @@
     "vin": "VIN",
     "call_for_price": "Call for Price",
     "view_details": "View Details",
-    "enquire_now": "Enquire Now"
+    "inquire_now": "Inquire Now"
   },
   "search_form": {
     "search_by_name_keyword": "Search by Name/Keyword",
@@ -43,13 +52,13 @@
     "not_available": "Car details not available.",
     "description": "Description"
   },
-  "enquire_page": {
+  "inquire_page": {
     "car_not_found_title": "Car Not Found",
     "car_not_found_description": "The car you are looking for does not exist or has been removed.",
-    "title": "Enquire About {{carName}}",
+    "title": "Inquire About {{carName}}",
     "description": "Fill out the form below and we'll contact you within 24 hours.",
-    "success_message": "Your enquiry has been submitted successfully! We will contact you within 24 hours.",
-    "error_message": "There was an error submitting your enquiry. Please try again.",
+    "success_message": "Your inquiry has been submitted successfully! We will contact you within 24 hours.",
+    "error_message": "There was an error submitting your inquiry. Please try again.",
     "full_name": "Full Name",
     "placeholder_full_name": "John Doe",
     "email": "Email",
@@ -58,7 +67,7 @@
     "placeholder_phone_number": "(123) 456-7890",
     "message": "Message",
     "placeholder_message": "Your message here...",
-    "submit_enquiry": "Submit Enquiry"
+    "submit_inquiry": "Submit Inquiry"
   },
   "contact_page": {
     "title": "Contact Us",
@@ -91,8 +100,8 @@
       "description": "Enter details for a new car to add to your inventory.",
       "car_name": "Car Name",
       "placeholder_car_name": "e.g., 2023 Honda Civic",
-      "image_url": "Image URL",
-      "placeholder_image_url": "https://example.com/car.jpg",
+      "image_files": "Image Files",
+      "placeholder_image_files": "Upload one or more images",
       "mileage": "Mileage",
       "placeholder_mileage": "e.g., 15000",
       "vin": "VIN",
@@ -132,17 +141,17 @@
       "table_views": "Views",
       "no_view_data": "No view data available yet."
     },
-    "user_enquiries": {
-      "title": "User Enquiries",
-      "description": "All submitted enquiries from potential customers.",
+    "user_inquiries": {
+      "title": "User Inquiries",
+      "description": "All submitted inquiries from potential customers.",
       "table_name": "Name",
       "table_email": "Email",
       "table_phone": "Phone",
-      "table_car_enquired": "Car Enquired",
+      "table_car_inquired": "Car Inquired",
       "table_date": "Date",
       "table_message": "Message",
       "car_deleted": "Car Deleted",
-      "no_enquiries": "No enquiries submitted yet."
+      "no_inquiries": "No inquiries submitted yet."
     }
   },
   "footer": {
@@ -157,6 +166,7 @@
     "friday": "Friday: 8:30 AM–6 PM",
     "saturday": "Saturday: 9 AM–5 PM",
     "sunday": "Sunday: Closed",
-    "phone_number": "Phone Number:"
+    "phone_number": "Phone Number:",
+    "email": "Email:"
   }
 }

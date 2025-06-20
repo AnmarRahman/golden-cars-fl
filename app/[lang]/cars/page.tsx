@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next"
 interface Car {
   id: string
   name: string
-  image_url: string
+  image_url: string[] // Changed to array of strings
   mileage: number
   vin: string
   description: string

@@ -10,7 +10,7 @@ import { getTranslation } from "@/lib/i18n"
 interface Car {
   id: string
   name: string
-  image_url: string
+  image_url: string[] // Changed to array of strings
   mileage: number
   vin: string
   description: string
@@ -29,7 +29,8 @@ async function getCarDetails(carId: string): Promise<Car | null> {
   return data as Car
 }
 
-export default async function EnquirePage({
+export default async function InquirePage({
+  // Renamed from EnquirePage
   params, // Receive params as a Promise
   searchParams,
 }: {
@@ -43,13 +44,14 @@ export default async function EnquirePage({
   if (!car) {
     return (
       <div className="container mx-auto py-12 px-4 md:px-6 lg:px-8 text-center bg-background text-foreground">
-        <h1 className="text-3xl font-bold mb-4">{t("enquire_page.car_not_found_title")}</h1>
-        <p className="text-muted-foreground">{t("enquire_page.car_not_found_description")}</p>
+        <h1 className="text-3xl font-bold mb-4">{t("inquire_page.car_not_found_title")}</h1>
+        <p className="text-muted-foreground">{t("inquire_page.car_not_found_description")}</p>
       </div>
     )
   }
 
-  const handleEnquiry = async (formData: FormData) => {
+  const handleInquiry = async (formData: FormData) => {
+    // Renamed from handleEnquiry
     "use server"
 
     const name = formData.get("name") as string
@@ -67,12 +69,12 @@ export default async function EnquirePage({
     })
 
     if (error) {
-      console.error("Error submitting enquiry:", error.message)
-      redirect(`/${lang}/cars/${car.id}/enquire?status=error`)
+      console.error("Error submitting inquiry:", error.message)
+      redirect(`/${lang}/cars/${car.id}/inquire?status=error`)
     }
 
     // Redirect to homepage on success
-    redirect(`/${lang}?enquiryStatus=success`)
+    redirect(`/${lang}?inquiryStatus=success`) // Changed query param
   }
 
   const status = searchParams.status
@@ -82,54 +84,54 @@ export default async function EnquirePage({
       <Card className="w-full max-w-2xl mx-auto bg-card text-card-foreground">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">
-            {t("enquire_page.title", { carName: car.name })}
+            {t("inquire_page.title", { carName: car.name })}
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground">
-            {t("enquire_page.description")}
+            {t("inquire_page.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {status === "success" && (
             <div className="bg-green-100 text-green-800 p-4 rounded-md mb-4 text-center">
-              {t("enquire_page.success_message")}
+              {t("inquire_page.success_message")}
             </div>
           )}
           {status === "error" && (
             <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">
-              {t("enquire_page.error_message")}
+              {t("inquire_page.error_message")}
             </div>
           )}
-          <form action={handleEnquiry} className="space-y-6">
+          <form action={handleInquiry} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">{t("enquire_page.full_name")}</Label>
-              <Input id="name" name="name" type="text" placeholder={t("enquire_page.placeholder_full_name")} required />
+              <Label htmlFor="name">{t("inquire_page.full_name")}</Label>
+              <Input id="name" name="name" type="text" placeholder={t("inquire_page.placeholder_full_name")} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">{t("enquire_page.email")}</Label>
-              <Input id="email" name="email" type="email" placeholder={t("enquire_page.placeholder_email")} required />
+              <Label htmlFor="email">{t("inquire_page.email")}</Label>
+              <Input id="email" name="email" type="email" placeholder={t("inquire_page.placeholder_email")} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone_number">{t("enquire_page.phone_number")}</Label>
+              <Label htmlFor="phone_number">{t("inquire_page.phone_number")}</Label>
               <Input
                 id="phone_number"
                 name="phone_number"
                 type="tel"
-                placeholder={t("enquire_page.placeholder_phone_number")}
+                placeholder={t("inquire_page.placeholder_phone_number")}
               />
             </div>
             {/* New Message Field */}
             <div className="space-y-2">
-              <Label htmlFor="message">{t("enquire_page.message")}</Label>
+              <Label htmlFor="message">{t("inquire_page.message")}</Label>
               <Textarea
                 id="message"
                 name="message"
-                placeholder={t("enquire_page.placeholder_message")}
+                placeholder={t("inquire_page.placeholder_message")}
                 rows={5}
                 required
               />
             </div>
             <Button type="submit" className="w-full">
-              {t("enquire_page.submit_enquiry")}
+              {t("inquire_page.submit_inquiry")}
             </Button>
           </form>
         </CardContent>

@@ -10,11 +10,12 @@ import { revalidatePath } from "next/cache"
 import Image from "next/image"
 import { getTranslation } from "@/lib/i18n"
 import { Table, TableFooter, TableCaption } from "@/components/ui/table"
+import { uploadImages } from "@/actions/upload-images" // Import the new upload action
 
 interface Car {
   id: string
   name: string
-  image_url: string
+  image_url: string[] // Changed to array of strings
   mileage: number
   vin: string
   description: string
@@ -86,32 +87,43 @@ export default async function AdminDashboardPage({
     "use server"
 
     const name = formData.get("name") as string
-    const image_url = formData.get("image_url") as string
     const mileage = Number.parseInt(formData.get("mileage") as string)
     const vin = formData.get("vin") as string
     const description = formData.get("description") as string
     const model_year = Number.parseInt(formData.get("model_year") as string)
-    const priceString = formData.get("price") as string // Get price as string
+    const priceString = formData.get("price") as string
 
-    // Convert price to number or null if empty
+    // Handle image uploads
+    let imageUrls: string[] = []
+    try {
+      imageUrls = await uploadImages(formData) // Call the new upload action
+    } catch (uploadError) {
+      console.error("Failed to upload images:", uploadError)
+      redirect(`/${lang}/admin/dashboard?status=error&message=${encodeURIComponent("Failed to upload images.")}`)
+    }
+
     const price = priceString ? Number.parseFloat(priceString) : null
 
     const supabase = createServerClient()
     const { error } = await supabase.from("cars").insert({
       name,
-      image_url,
+      image_url: imageUrls, // Store the array of URLs
       mileage,
       vin,
       description,
       model_year,
-      price, // Include price
+      price,
     })
 
     if (error) {
       console.error("Error adding car:", error.message)
+      redirect(
+        `/${lang}/admin/dashboard?status=error&message=${encodeURIComponent(`Failed to add car: ${error.message}`)}`,
+      )
     } else {
       revalidatePath(`/${lang}/admin/dashboard`)
       revalidatePath(`/${lang}/cars`)
+      redirect(`/${lang}/admin/dashboard?status=success&message=${encodeURIComponent("Car added successfully!")}`)
     }
   }
 
@@ -180,6 +192,12 @@ export default async function AdminDashboardPage({
           <CardDescription>{t("admin_dashboard.add_new_car.description")}</CardDescription>
         </CardHeader>
         <CardContent>
+          {status === "success" && message && (
+            <div className="bg-green-100 text-green-800 p-4 rounded-md mb-4 text-center">{message}</div>
+          )}
+          {status === "error" && message && (
+            <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">{message}</div>
+          )}
           <form action={handleAddCar} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -193,12 +211,14 @@ export default async function AdminDashboardPage({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="image_url">{t("admin_dashboard.add_new_car.image_url")}</Label>
+                <Label htmlFor="images">{t("admin_dashboard.add_new_car.image_files")}</Label>
                 <Input
-                  id="image_url"
-                  name="image_url"
-                  type="url"
-                  placeholder={t("admin_dashboard.add_new_car.placeholder_image_url")}
+                  id="images"
+                  name="images"
+                  type="file"
+                  multiple // Allow multiple file selection
+                  accept="image/*" // Restrict to image files
+                  placeholder={t("admin_dashboard.add_new_car.placeholder_image_files")}
                 />
               </div>
               <div className="space-y-2">
@@ -304,7 +324,7 @@ export default async function AdminDashboardPage({
                 >
                   <div className="relative h-48 w-full">
                     <Image
-                      src={car.image_url || "/placeholder.svg?height=300&width=400"}
+                      src={car.image_url[0] || "/placeholder.svg?height=300&width=400"} // Use first image or placeholder
                       alt={car.name}
                       fill
                       className="object-cover object-center"
@@ -378,11 +398,11 @@ export default async function AdminDashboardPage({
         </CardContent>
       </Card>
 
-      {/* User Enquiries Section */}
+      {/* User Inquiries Section */}
       <Card className="bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle>{t("admin_dashboard.user_enquiries.title")}</CardTitle>
-          <CardDescription>{t("admin_dashboard.user_enquiries.description")}</CardDescription>
+          <CardTitle>{t("admin_dashboard.user_inquiries.title")}</CardTitle>
+          <CardDescription>{t("admin_dashboard.user_inquiries.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           {enquiries && enquiries.length > 0 ? (
@@ -391,28 +411,28 @@ export default async function AdminDashboardPage({
                 <Card key={enquiry.id} className="rounded-lg shadow-md bg-card text-card-foreground flex flex-col">
                   <CardContent className="flex-grow p-4 space-y-2">
                     <p className="text-lg font-bold">
-                      {t("admin_dashboard.user_enquiries.table_name")}: {enquiry.name}
+                      {t("admin_dashboard.user_inquiries.table_name")}: {enquiry.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold">{t("admin_dashboard.user_enquiries.table_email")}:</span>{" "}
+                      <span className="font-semibold">{t("admin_dashboard.user_inquiries.table_email")}:</span>{" "}
                       {enquiry.email}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold">{t("admin_dashboard.user_enquiries.table_phone")}:</span>{" "}
+                      <span className="font-semibold">{t("admin_dashboard.user_inquiries.table_phone")}:</span>{" "}
                       {enquiry.phone_number || "N/A"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold">{t("admin_dashboard.user_enquiries.table_car_enquired")}:</span>{" "}
-                      {enquiry.cars?.name || t("admin_dashboard.user_enquiries.car_deleted")}
+                      <span className="font-semibold">{t("admin_dashboard.user_inquiries.table_car_inquired")}:</span>{" "}
+                      {enquiry.cars?.name || t("admin_dashboard.user_inquiries.car_deleted")}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold">{t("admin_dashboard.user_enquiries.table_date")}:</span>{" "}
+                      <span className="font-semibold">{t("admin_dashboard.user_inquiries.table_date")}:</span>{" "}
                       {new Date(enquiry.enquiry_date).toLocaleDateString()}
                     </p>
                     {enquiry.message && (
                       <div className="space-y-1">
                         <p className="font-semibold text-foreground">
-                          {t("admin_dashboard.user_enquiries.table_message")}:
+                          {t("admin_dashboard.user_inquiries.table_message")}:
                         </p>
                         <p className="text-muted-foreground text-sm italic">{enquiry.message}</p>
                       </div>
@@ -422,7 +442,7 @@ export default async function AdminDashboardPage({
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">{t("admin_dashboard.user_enquiries.no_enquiries")}</p>
+            <p className="text-muted-foreground">{t("admin_dashboard.user_inquiries.no_inquiries")}</p>
           )}
         </CardContent>
       </Card>

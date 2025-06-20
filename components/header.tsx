@@ -24,9 +24,9 @@ export function Header({ lang }: { lang: string }) {
   }
 
   return (
-    <header className="bg-black text-white py-4 px-6 flex items-center justify-between border-b border-gray-800">
+    <header className="bg-black text-white py-4 px-6 md:flex flex-row items-center md:justify-between justify-center border-b border-gray-800">
       <Logo lang={lang} />
-      <nav className="flex items-center gap-4">
+      <nav className="flex items-center justify-center gap-4 md:pt-0 pt-4">
         <Button
           variant="outline"
           className="bg-black text-white border-white hover:bg-gray-800"

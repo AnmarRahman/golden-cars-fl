@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { X } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react" // Import Chevron icons
 import { useEffect, useState } from "react"
 import { createClientClient } from "@/lib/supabase/client"
 import { useTranslation } from "react-i18next"
@@ -14,7 +14,7 @@ import { useParams } from "next/navigation"
 interface Car {
   id: string
   name: string
-  image_url: string
+  image_url: string[] // Changed to array of strings
   mileage: number
   vin: string
   description: string
@@ -32,6 +32,7 @@ export function CarDetailModal({ carId, onClose }: CarDetailModalProps) {
   const [car, setCar] = useState<Car | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0) // New state for image index
   const supabase = createClientClient()
   const { t, i18n } = useTranslation()
   const params = useParams()
@@ -76,6 +77,7 @@ export function CarDetailModal({ carId, onClose }: CarDetailModalProps) {
         } else {
           console.log("CarDetailModal: Successfully fetched car data:", data)
           setCar(data)
+          setCurrentImageIndex(0) // Reset image index when new car is loaded
           if (data) {
             await incrementCarView(data.id, lang)
           }
@@ -93,6 +95,18 @@ export function CarDetailModal({ carId, onClose }: CarDetailModalProps) {
     fetchCarDetails()
   }, [carId, supabase, t, lang])
 
+  const handleNextImage = () => {
+    if (car && car.image_url && car.image_url.length > 1) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % car.image_url.length)
+    }
+  }
+
+  const handlePrevImage = () => {
+    if (car && car.image_url && car.image_url.length > 1) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + car.image_url.length) % car.image_url.length)
+    }
+  }
+
   return (
     <Dialog open={!!carId} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
@@ -101,15 +115,6 @@ export function CarDetailModal({ carId, onClose }: CarDetailModalProps) {
           <DialogDescription className="text-muted-foreground">
             {car?.model_year ? `${t("cars_page.year")}: ${car.model_year}` : ""}
           </DialogDescription>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">{t("car_detail_modal.close")}</span>
-          </Button>
         </DialogHeader>
         {loading ? (
           <div className="p-6 text-center">{t("car_detail_modal.loading_details")}</div>
@@ -119,11 +124,33 @@ export function CarDetailModal({ carId, onClose }: CarDetailModalProps) {
           <div className="grid md:grid-cols-2 gap-6 p-6 pt-0">
             <div className="relative h-64 w-full rounded-lg overflow-hidden">
               <Image
-                src={car.image_url || "/placeholder.svg?height=400&width=600"}
+                src={car.image_url[currentImageIndex] || "/placeholder.svg?height=400&width=600"}
                 alt={car.name}
                 fill
                 className="object-cover object-center"
               />
+              {car.image_url && car.image_url.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white hover:bg-black/70"
+                    onClick={handlePrevImage}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                    <span className="sr-only">Previous image</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white hover:bg-black/70"
+                    onClick={handleNextImage}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                    <span className="sr-only">Next image</span>
+                  </Button>
+                </>
+              )}
             </div>
             <div className="space-y-4">
               <p className="text-3xl font-bold text-primary">
@@ -139,8 +166,8 @@ export function CarDetailModal({ carId, onClose }: CarDetailModalProps) {
                 <p className="font-semibold text-foreground">{t("car_detail_modal.description")}:</p>
                 <p className="text-muted-foreground">{car.description}</p>
               </div>
-              <Link href={`/${i18n.language}/cars/${car.id}/enquire`}>
-                <Button className="w-full">{t("cars_page.enquire_now")}</Button>
+              <Link href={`/${i18n.language}/cars/${car.id}/inquire`}>
+                <Button className="w-full">{t("cars_page.inquire_now")}</Button>
               </Link>
             </div>
           </div>

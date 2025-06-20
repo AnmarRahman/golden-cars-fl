@@ -3,7 +3,7 @@ import Link from "next/link"
 
 export function Logo({ lang }: { lang: string }) {
   return (
-    <Link href={`/${lang}/`} className="flex items-center">
+    <Link href={`/${lang}/`} className="flex items-center justify-center">
       <Image
         src="/logo-2.png"
         alt="Golden Cars FL Logo"

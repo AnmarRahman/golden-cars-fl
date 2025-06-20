@@ -33,7 +33,11 @@ export async function Footer({ lang }: { lang: string }) {
         </div>
         <div className="text-center md:text-right">
           <p className="font-semibold text-white">{t("footer.phone_number")}</p>
-          <p>+1 813-770-7996</p>
+          <p>+1 813-564-7900</p>
+        </div>
+        <div className="text-center md:text-right">
+          <p className="font-semibold text-white">{t("footer.email")}</p>
+          <p>goldencarsfl@gmail.com</p>
         </div>
       </div>
     </footer>

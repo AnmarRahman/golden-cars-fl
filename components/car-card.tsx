@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next"
 interface Car {
   id: string
   name: string
-  image_url: string
+  image_url: string[] // Changed to array of strings
   mileage: number
   vin: string
   description: string
@@ -35,7 +35,7 @@ export function CarCard({ car }: CarCardProps) {
     <Card className="rounded-lg shadow-lg overflow-hidden bg-card text-card-foreground flex flex-col h-full">
       <div className="relative h-48 w-full">
         <Image
-          src={car.image_url || "/placeholder.svg?height=300&width=400"}
+          src={car.image_url[0] || "/placeholder.svg?height=300&width=400"} // Use first image or placeholder
           alt={car.name}
           fill
           className="object-cover object-center"
@@ -62,13 +62,12 @@ export function CarCard({ car }: CarCardProps) {
         <Button onClick={handleViewDetails} className="w-full">
           {t("cars_page.view_details")}
         </Button>
-        <Link href={`/${i18n.language}/cars/${car.id}/enquire`} className="w-full">
+        <Link href={`/${i18n.language}/cars/${car.id}/inquire`} className="w-full">
           <Button variant="outline" className="w-full bg-black text-white">
-            {t("cars_page.enquire_now")}
+            {t("cars_page.inquire_now")}
           </Button>
         </Link>
       </CardFooter>
     </Card>
   )
 }
-
