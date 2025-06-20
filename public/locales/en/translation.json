@@ -1,0 +1,162 @@
+{
+  "hero": {
+    "title": "GOLDEN CARS FL",
+    "subtitle": "Your premier destination for luxury and performance vehicles in Tampa, FL. Discover your dream car today.",
+    "explore_inventory": "Explore Our Inventory"
+  },
+  "about_us": {
+    "title": "About Golden Cars FL",
+    "description": "At Golden Cars FL, we pride ourselves on offering an unparalleled selection of high-quality pre-owned vehicles. Our commitment to customer satisfaction, transparent pricing, and a seamless buying experience sets us apart. Visit us today and let our expert team help you find the perfect car that fits your lifestyle and budget."
+  },
+  "cars_page": {
+    "title": "Our Available Inventory",
+    "loading_filters": "Loading search filters...",
+    "loading_cars": "Loading cars...",
+    "failed_to_load_cars": "Failed to load cars. Please try again.",
+    "no_cars_found": "No cars found matching your criteria.",
+    "year": "Year",
+    "mileage": "Mileage",
+    "vin": "VIN",
+    "call_for_price": "Call for Price",
+    "view_details": "View Details",
+    "enquire_now": "Enquire Now"
+  },
+  "search_form": {
+    "search_by_name_keyword": "Search by Name/Keyword",
+    "placeholder_name_keyword": "e.g., Honda Civic, SUV",
+    "model_year": "Model Year",
+    "any_year": "Any Year",
+    "min_mileage": "Min Mileage",
+    "placeholder_min_mileage": "e.g., 10000",
+    "max_mileage": "Max Mileage",
+    "placeholder_max_mileage": "e.g., 50000",
+    "vin": "VIN",
+    "placeholder_vin": "e.g., 17-digit VIN",
+    "search_cars": "Search Cars",
+    "clear_filters": "Clear Filters"
+  },
+  "car_detail_modal": {
+    "car_details": "Car Details",
+    "close": "Close",
+    "loading_details": "Loading car details...",
+    "failed_to_load": "Failed to load car details.",
+    "not_available": "Car details not available.",
+    "description": "Description"
+  },
+  "enquire_page": {
+    "car_not_found_title": "Car Not Found",
+    "car_not_found_description": "The car you are looking for does not exist or has been removed.",
+    "title": "Enquire About {{carName}}",
+    "description": "Fill out the form below and we'll contact you within 24 hours.",
+    "success_message": "Your enquiry has been submitted successfully! We will contact you within 24 hours.",
+    "error_message": "There was an error submitting your enquiry. Please try again.",
+    "full_name": "Full Name",
+    "placeholder_full_name": "John Doe",
+    "email": "Email",
+    "placeholder_email": "john.doe@example.com",
+    "phone_number": "Phone Number",
+    "placeholder_phone_number": "(123) 456-7890",
+    "message": "Message",
+    "placeholder_message": "Your message here...",
+    "submit_enquiry": "Submit Enquiry"
+  },
+  "contact_page": {
+    "title": "Contact Us",
+    "description": "Have a question? Send us a message and we'll get back to you.",
+    "success_message": "Your message has been sent successfully! We will get back to you soon.",
+    "full_name": "Full Name",
+    "placeholder_full_name": "John Doe",
+    "email": "Email",
+    "placeholder_email": "john.doe@example.com",
+    "subject": "Subject",
+    "placeholder_subject": "Inquiry about a car",
+    "message": "Message",
+    "placeholder_message": "Your message here...",
+    "send_message": "Send Message"
+  },
+  "admin_login": {
+    "title": "Admin Login",
+    "description": "Enter your credentials to access the dashboard.",
+    "email": "Email",
+    "placeholder_email": "admin@goldencars.com",
+    "password": "Password",
+    "login": "Login",
+    "invalid_credentials": "Invalid email or password."
+  },
+  "admin_dashboard": {
+    "title": "Admin Dashboard",
+    "logout": "Logout",
+    "add_new_car": {
+      "title": "Add New Car",
+      "description": "Enter details for a new car to add to your inventory.",
+      "car_name": "Car Name",
+      "placeholder_car_name": "e.g., 2023 Honda Civic",
+      "image_url": "Image URL",
+      "placeholder_image_url": "https://example.com/car.jpg",
+      "mileage": "Mileage",
+      "placeholder_mileage": "e.g., 15000",
+      "vin": "VIN",
+      "placeholder_vin": "17-digit VIN",
+      "model_year": "Model Year",
+      "placeholder_model_year": "e.g., 2023",
+      "price": "Price (Optional)",
+      "placeholder_price": "e.g., 25000.00",
+      "description": "Description",
+      "placeholder_description": "Detailed description of the car...",
+      "add_car": "Add Car"
+    },
+    "change_password": {
+      "title": "Change Admin Password",
+      "description": "Update your password for the admin account.",
+      "new_password": "New Password",
+      "confirm_new_password": "Confirm New Password",
+      "change_password_button": "Change Password"
+    },
+    "manage_cars": {
+      "title": "Manage Cars",
+      "description": "View and delete existing cars in your inventory.",
+      "table_image": "Image",
+      "table_name": "Name",
+      "table_mileage": "Mileage",
+      "table_year": "Year",
+      "table_price": "Price",
+      "table_vin": "VIN",
+      "table_actions": "Actions",
+      "delete": "Delete",
+      "no_cars_found": "No cars found in your inventory."
+    },
+    "most_visited_cars": {
+      "title": "Most Visited Cars",
+      "description": "Top 5 cars by view count.",
+      "table_name": "Name",
+      "table_views": "Views",
+      "no_view_data": "No view data available yet."
+    },
+    "user_enquiries": {
+      "title": "User Enquiries",
+      "description": "All submitted enquiries from potential customers.",
+      "table_name": "Name",
+      "table_email": "Email",
+      "table_phone": "Phone",
+      "table_car_enquired": "Car Enquired",
+      "table_date": "Date",
+      "table_message": "Message",
+      "car_deleted": "Car Deleted",
+      "no_enquiries": "No enquiries submitted yet."
+    }
+  },
+  "footer": {
+    "copyright": "Golden Cars FL. All rights reserved.",
+    "location": "Location:",
+    "address": "1400 E Hillsborough Ave, Tampa, FL 33604, United States",
+    "opening_hours": "Opening Hours:",
+    "monday": "Monday: 8:30 AM–6 PM",
+    "tuesday": "Tuesday: 8:30 AM–6 PM",
+    "wednesday": "Wednesday: 8:30 AM–6 PM",
+    "thursday": "Thursday: 8:30 AM–6 PM",
+    "friday": "Friday: 8:30 AM–6 PM",
+    "saturday": "Saturday: 9 AM–5 PM",
+    "sunday": "Sunday: Closed",
+    "phone_number": "Phone Number:"
+  }
+}
