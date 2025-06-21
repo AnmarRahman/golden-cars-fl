@@ -4,8 +4,7 @@ import { createClientClient } from "@/lib/supabase/client"
 import { CarCard } from "@/components/car-card"
 import { SearchForm } from "@/components/search-form"
 import { Suspense, useEffect, useState } from "react"
-import { CarDetailModal } from "@/components/car-detail-modal"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation" // Removed useRouter as modal logic is gone
 import { useTranslation } from "react-i18next"
 
 // Define the type for a car
@@ -19,6 +18,10 @@ interface Car {
   model_year: number
   views: number
   price: number | null // Added price
+  body_style: string | null // Added body_style
+  drivetrain: string | null // Added drivetrain
+  brand: string | null // Added brand
+  model: string | null // Added model
 }
 
 // Function to fetch cars from Supabase using the client-side client
@@ -28,17 +31,23 @@ async function getCarsClient(searchParams: {
   min_mileage?: string
   max_mileage?: string
   vin?: string
+  price_range?: string
+  body_style?: string
+  drivetrain?: string
+  brand?: string // Added brand
+  model?: string // Added model
 }): Promise<Car[]> {
   const supabase = createClientClient()
   // Corrected: Use the generic type parameter for select to specify the expected row type
   let query = supabase.from("cars").select<"*" | keyof Car, Car>("*")
 
-  const { q, model_year, min_mileage, max_mileage, vin } = searchParams
+  const { q, model_year, min_mileage, max_mileage, vin, price_range, body_style, drivetrain, brand, model } =
+    searchParams
 
   if (q && typeof q === "string") {
     query = query.ilike("name", `%${q}%`)
   }
-  if (model_year && typeof model_year === "string") {
+  if (model_year && typeof model_year === "string" && model_year !== "Any Year") {
     query = query.eq("model_year", Number.parseInt(model_year))
   }
   if (min_mileage && typeof min_mileage === "string") {
@@ -51,6 +60,44 @@ async function getCarsClient(searchParams: {
     query = query.ilike("vin", `%${vin}%`)
   }
 
+  // Apply price range filter
+  if (price_range) {
+    switch (price_range) {
+      case "under_10k":
+        query = query.lte("price", 10000)
+        break
+      case "10k_20k":
+        query = query.gte("price", 10000).lte("price", 20000)
+        break
+      case "20k_plus":
+        query = query.gte("price", 20000)
+        break
+      default:
+        // "any_price" or invalid value, no price filter applied
+        break
+    }
+  }
+
+  // Apply body style filter
+  if (body_style && typeof body_style === "string" && body_style !== "any_body_style") {
+    query = query.eq("body_style", body_style)
+  }
+
+  // Apply drivetrain filter
+  if (drivetrain && typeof drivetrain === "string" && drivetrain !== "any_drivetrain") {
+    query = query.eq("drivetrain", drivetrain)
+  }
+
+  // Apply brand filter
+  if (brand && typeof brand === "string") {
+    query = query.ilike("brand", `%${brand}%`)
+  }
+
+  // Apply model filter
+  if (model && typeof model === "string") {
+    query = query.ilike("model", `%${model}%`)
+  }
+
   const { data, error } = await query.order("created_at", { ascending: false })
 
   if (error) {
@@ -58,19 +105,12 @@ async function getCarsClient(searchParams: {
     return []
   }
 
-  // If select is correctly typed, data should already be Car[] or Car[] | null
-  // We can safely cast to Car[] here, assuming data is not null (or handle null explicitly)
   return data as Car[]
 }
 
 const CarsPage = () => {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const carIdFromUrl = searchParams.get("carId")
   const { t } = useTranslation()
-
-  // Log the carIdFromUrl here to see its value before passing to modal
-  console.log("CarsPage: carIdFromUrl before passing to modal:", carIdFromUrl, "Type:", typeof carIdFromUrl)
 
   const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,13 +135,6 @@ const CarsPage = () => {
     fetchCars()
   }, [searchParams, t])
 
-  const handleCloseModal = () => {
-    // Remove carId from URL to close modal
-    const currentParams = new URLSearchParams(searchParams.toString())
-    currentParams.delete("carId")
-    router.push(`/cars?${currentParams.toString()}`, { scroll: false })
-  }
-
   return (
     <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 bg-background text-foreground">
       <h1 className="text-4xl font-bold mb-8 text-center">{t("cars_page.title")}</h1>
@@ -125,8 +158,6 @@ const CarsPage = () => {
           ))}
         </div>
       )}
-
-      <CarDetailModal carId={carIdFromUrl} onClose={handleCloseModal} />
     </div>
   )
 }

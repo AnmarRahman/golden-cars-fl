@@ -22,7 +22,7 @@ export default async function HomePage(props: { params: Promise<{ lang: string }
           className="z-0 object-cover"
         />
         <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-center p-4 z-10">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white drop-shadow-lg mb-4 uppercase">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-wdxl-lubrifont-sc text-white drop-shadow-lg mb-4 uppercase">
             {t("hero.title")}
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl text-gray-200 max-w-3xl mb-8">{t("hero.subtitle")}</p>

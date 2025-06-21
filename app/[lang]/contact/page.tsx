@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { redirect } from "next/navigation"
 import { getTranslation } from "@/lib/i18n"
+import { sendEmail } from "@/actions/send-email" // Import the sendEmail action
 
 export default async function ContactPage({
   params, // Receive params as a Promise
@@ -24,14 +25,31 @@ export default async function ContactPage({
     const subject = formData.get("subject") as string
     const message = formData.get("message") as string
 
-    // In a real application, you would send this data to an email service (e.g., Resend, Nodemailer)
-    console.log("New Contact Form Submission:")
-    console.log(`Name: ${name}`)
-    console.log(`Email: ${email}`)
-    console.log(`Subject: ${subject}`)
-    console.log(`Message: ${message}`)
+    // Send email notification to the dealership
+    const dealershipEmailResult = await sendEmail({
+      to: "goldencarsfl@gmail.com", // Dealership email
+      subject: `New Contact Form Submission from ${name}: ${subject}`,
+      html: `
+        <p>You have a new contact form submission:</p>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `,
+      fromDisplayName: "Golden Cars FL", // Friendly name for the sender
+      replyTo: email, // Replies go to the sender's email
+    })
 
-    // Simulate success
+    // Removed customer confirmation email for now as per your request.
+    // const customerEmailResult = await sendEmail({ ... });
+
+    if (!dealershipEmailResult.success) {
+      // Only check dealership email result
+      console.error("Dealership email failed to send for contact form.")
+      redirect(`/${lang}/contact?status=error`)
+    }
+
     redirect(`/${lang}/contact?status=success`) // Use the awaited lang
   }
 
