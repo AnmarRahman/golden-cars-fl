@@ -32,7 +32,9 @@
     "body_style": "Estilo de Carrocería",
     "drivetrain": "Tipo de Tracción",
     "brand": "Marca",
-    "model": "Modelo"
+    "model": "Modelo",
+    "trim": "Versión",
+    "cylinders": "Cilindros"
   },
   "car_detail_page": {
     "loading_details": "Cargando detalles del coche...",
@@ -78,7 +80,11 @@
     "brand": "Marca",
     "placeholder_brand": "ej., Toyota",
     "model": "Modelo",
-    "placeholder_model": "ej., Camry"
+    "placeholder_model": "ej., Camry",
+    "trim": "Versión",
+    "placeholder_trim": "ej., EX-L, Sport",
+    "cylinders": "Cilindros",
+    "placeholder_cylinders": "ej., 4, 6, 8"
   },
   "inquire_page": {
     "car_not_found_title": "Coche No Encontrado",
@@ -146,16 +152,32 @@
       "placeholder_brand": "ej., Toyota",
       "model": "Modelo",
       "placeholder_model": "ej., Camry",
+      "trim": "Versión",
+      "placeholder_trim": "ej., EX-L, Sport",
+      "cylinders": "Cilindros",
+      "placeholder_cylinders": "ej., 4, 6, 8",
       "description": "Descripción",
       "placeholder_description": "Descripción detallada del coche...",
-      "add_car": "Añadir Coche"
+      "add_car": "Añadir Coche",
+      "validation_error": "Error de Validación",
+      "brand_model_required": "La marca y el modelo del coche son obligatorios.",
+      "uploading_images": "Subiendo imágenes...",
+      "processing_car_data": "Procesando datos del coche...",
+      "upload_success_title": "¡Subida Exitosa!",
+      "car_added_successfully": "¡Coche añadido exitosamente!",
+      "upload_failed_title": "Subida Fallida",
+      "image_upload_failed": "Error al subir imágenes. Por favor, inténtelo de nuevo.",
+      "failed_to_add_car": "Error al añadir coche. Por favor, inténtelo de nuevo."
     },
     "change_password": {
       "title": "Cambiar Contraseña de Administrador",
       "description": "Actualice su contraseña para la cuenta de administrador.",
       "new_password": "Nueva Contraseña",
       "confirm_new_password": "Confirmar Nueva Contraseña",
-      "change_password_button": "Cambiar Contraseña"
+      "change_password_button": "Cambiar Contraseña",
+      "success_title": "Contraseña Cambiada Exitosamente",
+      "error_title": "Error al Cambiar Contraseña",
+      "failed_to_change_password": "Error al cambiar la contraseña. Por favor, inténtelo de nuevo."
     },
     "manage_cars": {
       "title": "Gestionar Coches",
@@ -170,8 +192,12 @@
       "table_drivetrain": "Tipo de Tracción",
       "table_brand": "Marca",
       "table_model": "Modelo",
+      "table_trim": "Versión",
+      "table_cylinders": "Cilindros",
       "table_actions": "Acciones",
       "delete": "Eliminar",
+      "delete_success_title": "¡Coche Eliminado!",
+      "delete_success_message": "El coche ha sido eliminado exitosamente del inventario.",
       "no_cars_found": "No se encontraron coches en su inventario."
     },
     "most_visited_cars": {

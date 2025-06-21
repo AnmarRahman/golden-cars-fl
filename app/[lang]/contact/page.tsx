@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { redirect } from "next/navigation"
-import { getTranslation } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 import { sendEmail } from "@/actions/send-email" // Import the sendEmail action
 
 export default async function ContactPage({
@@ -15,7 +15,7 @@ export default async function ContactPage({
   searchParams: { status?: string }
 }) {
   const { lang } = await params // Await params to get the lang property
-  const { t } = await getTranslation(lang, "translation")
+  const { t } = await useTranslation(lang, "translation")
 
   const handleContactSubmit = async (formData: FormData) => {
     "use server"

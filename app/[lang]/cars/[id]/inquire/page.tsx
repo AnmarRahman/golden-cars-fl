@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { getTranslation } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 import { sendEmail } from "@/actions/send-email"
+import { incrementCarView } from "@/actions/car-views"
 
 interface Car {
   id: string
@@ -20,6 +21,8 @@ interface Car {
   price: number | null
   body_style: string | null // Added body_style
   drivetrain: string | null // Added drivetrain
+  trim: string | null // Added trim
+  cylinders: number | null // Added cylinders
 }
 
 async function getCarDetails(carId: string): Promise<Car | null> {
@@ -37,12 +40,13 @@ export default async function InquirePage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string; lang: string }>
-  searchParams: { status?: string }
+  params: { id: string; lang: string }
+  searchParams: { status?: string; source?: string } // Added source to searchParams
 }) {
-  const { id, lang } = await params
-  const { t } = await getTranslation(lang, "translation")
+  const { id, lang } = params
+  const { t } = await useTranslation(lang, "translation")
   const car = await getCarDetails(id)
+  const source = searchParams.source // Get the source from query parameters
 
   if (!car) {
     return (
@@ -56,12 +60,17 @@ export default async function InquirePage({
   const handleInquiry = async (formData: FormData) => {
     "use server"
 
-    const { t: tAction } = await getTranslation(lang, "translation")
+    const { t: tAction } = await useTranslation(lang, "translation")
 
     const name = formData.get("name") as string
     const email = formData.get("email") as string
     const phone_number = formData.get("phone_number") as string
     const message = formData.get("message") as string
+
+    // Increment car view count ONLY if the inquiry originated from search results
+    if (source === "search") {
+      await incrementCarView(car.id, lang)
+    }
 
     const supabase = createServerClient()
     const { error } = await supabase.from("enquiries").insert({
@@ -69,6 +78,7 @@ export default async function InquirePage({
       email,
       phone_number,
       car_id: car.id,
+      car_name_at_inquiry: car.name, // Store the car name at the time of inquiry
       message,
     })
 
@@ -94,6 +104,8 @@ export default async function InquirePage({
         <p>Car Price: ${car.price !== null ? `$${car.price.toLocaleString()}` : "Call for Price"}</p>
         ${car.body_style ? `<p>Car Body Style: ${tAction(`search_form.${car.body_style.toLowerCase()}`)}</p>` : ""}
         ${car.drivetrain ? `<p>Car Drivetrain: ${tAction(`search_form.${car.drivetrain.toLowerCase()}`)}</p>` : ""}
+        ${car.trim ? `<p>Car Trim: ${car.trim}</p>` : ""}
+        ${car.cylinders ? `<p>Car Cylinders: ${car.cylinders}</p>` : ""}
         <p>View car details: <a href="${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/cars/${car.id}">${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/cars/${car.id}</a></p>
       `,
       fromDisplayName: "Golden Cars FL", // Friendly name for the sender

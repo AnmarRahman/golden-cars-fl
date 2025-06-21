@@ -3,7 +3,7 @@
 import { AdminDashboardClient } from "@/components/admin-dashboard-client"
 import { createServerClient, createSupabaseServerComponentClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { getTranslation } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 import { handleChangePassword, handleLogout, handleDeleteCar, handleAddCar } from "@/actions/admin-actions"
 
 interface Car {
@@ -21,6 +21,8 @@ interface Car {
   drivetrain: string | null
   brand: string | null
   model: string | null
+  trim: string | null
+  cylinders: number | null
 }
 
 interface Enquiry {
@@ -31,19 +33,27 @@ interface Enquiry {
   car_id: string | null
   enquiry_date: string
   message: string | null
+  car_name_at_inquiry: string | null
   cars: { name: string } | null
+}
+
+// New interface for most visited car stats
+interface MostVisitedCarStat {
+  car_id: string
+  car_name: string
+  views: number
 }
 
 export default async function AdminDashboardPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ lang: string }>
+  params: { lang: string }
   searchParams: { status?: string; message?: string }
 }) {
-  const { lang } = await params
+  const { lang } = params
   const { status, message } = searchParams
-  const { t } = await getTranslation(lang, "translation") // Use server-side translation
+  const { t } = await useTranslation(lang, "translation")
 
   const supabase = await createSupabaseServerComponentClient()
 
@@ -55,7 +65,6 @@ export default async function AdminDashboardPage({
     redirect(`/${lang}/admin`)
   }
 
-  // Fetch data using server-side Supabase client
   const supabaseAdminData = createServerClient()
 
   const { data: carsData, error: carsError } = await supabaseAdminData
@@ -66,20 +75,21 @@ export default async function AdminDashboardPage({
 
   const { data: enquiriesData, error: enquiriesError } = await supabaseAdminData
     .from("enquiries")
-    .select("*, cars(name)")
+    .select("*, car_name_at_inquiry")
     .order("enquiry_date", { ascending: false })
   if (enquiriesError) console.error("Error fetching enquiries:", enquiriesError)
 
+  // Fetch most visited cars from the new car_view_stats table
   const { data: mostVisitedCarsData, error: mostVisitedCarsError } = await supabaseAdminData
-    .from("cars")
-    .select("*")
+    .from("car_view_stats")
+    .select("car_id, car_name, views")
     .order("views", { ascending: false })
     .limit(5)
   if (mostVisitedCarsError) console.error("Error fetching most visited cars:", mostVisitedCarsError)
 
   const initialCars = (carsData || []) as Car[]
   const initialEnquiries = (enquiriesData || []) as Enquiry[]
-  const initialMostVisitedCars = (mostVisitedCarsData || []) as Car[]
+  const initialMostVisitedCars = (mostVisitedCarsData || []) as MostVisitedCarStat[] // Use new interface
 
   return (
     <AdminDashboardClient

@@ -4,7 +4,7 @@ import { createClientClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { incrementCarView } from "@/actions/car-views"
 import { useParams, useRouter } from "next/navigation"
@@ -39,6 +39,11 @@ export default function CarDetailPage() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const supabase = createClientClient()
 
+    // Ref to track if view has been incremented for this component instance
+    // This helps prevent double-counting in React Strict Mode (development).
+    const hasViewIncremented = useRef(false)
+
+    // Effect for fetching car details
     useEffect(() => {
         async function fetchCarDetails() {
             setLoading(true)
@@ -54,9 +59,6 @@ export default function CarDetailPage() {
                 } else {
                     setCar(data)
                     setCurrentImageIndex(0) // Reset image index when new car is loaded
-                    if (data) {
-                        await incrementCarView(data.id, lang)
-                    }
                 }
             } catch (e) {
                 console.error("Unexpected error during fetch:", e)
@@ -74,6 +76,24 @@ export default function CarDetailPage() {
             setError(t("car_detail_page.not_available"))
         }
     }, [carId, supabase, t, lang])
+
+    // Effect for incrementing views - runs only once per carId change
+    // In React Strict Mode (development), effects run twice on mount.
+    // The `hasViewIncremented` ref helps prevent the action from being called twice.
+    useEffect(() => {
+        if (carId && !hasViewIncremented.current) {
+            incrementCarView(carId, lang)
+            hasViewIncremented.current = true
+        }
+
+        // Cleanup function for Strict Mode:
+        // When the component unmounts (or re-mounts in Strict Mode),
+        // reset the ref so that if the component is re-mounted later,
+        // the view can be incremented again.
+        return () => {
+            hasViewIncremented.current = false
+        }
+    }, [carId, lang]) // Dependencies: carId and lang to re-run if these change
 
     const handleNextImage = () => {
         if (car && car.image_url && car.image_url.length > 1) {
@@ -209,7 +229,7 @@ export default function CarDetailPage() {
                         <h3 className="font-semibold text-xl text-foreground">{t("car_detail_page.description")}:</h3>
                         <p className="text-muted-foreground">{car.description}</p>
                     </div>
-                    <Link href={`/${i18n.language}/cars/${car.id}/inquire`} className="block">
+                    <Link href={`/${i18n.language}/cars/${car.id}/inquire?source=detail`} className="block">
                         <Button className="w-full py-3 text-lg">{t("cars_page.inquire_now")}</Button>
                     </Link>
                 </div>

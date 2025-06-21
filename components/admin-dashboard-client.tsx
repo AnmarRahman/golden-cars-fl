@@ -1,21 +1,23 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useTransition } from "react"
 import Image from "next/image"
 import { useTranslation } from "react-i18next"
-
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableFooter, TableCaption, TableRow } from "@/components/ui/table" // Import TableRow
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table" // Updated imports
+import { Badge } from "@/components/ui/badge" // New import for Badge
 import { carData } from "@/lib/car-data"
+import { uploadImages } from "@/actions/upload-images"
+import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 
-// Define types for props
 interface Car {
     id: string
     name: string
@@ -31,6 +33,8 @@ interface Car {
     drivetrain: string | null
     brand: string | null
     model: string | null
+    trim: string | null
+    cylinders: number | null
 }
 
 interface Enquiry {
@@ -41,7 +45,15 @@ interface Enquiry {
     car_id: string | null
     enquiry_date: string
     message: string | null
+    car_name_at_inquiry: string | null
     cars: { name: string } | null
+}
+
+// New interface for most visited car stats
+interface MostVisitedCarStat {
+    car_id: string
+    car_name: string
+    views: number
 }
 
 interface AdminDashboardClientProps {
@@ -50,11 +62,11 @@ interface AdminDashboardClientProps {
     message?: string
     initialCars: Car[]
     initialEnquiries: Enquiry[]
-    initialMostVisitedCars: Car[]
-    handleChangePassword: (formData: FormData, lang: string) => Promise<void>
+    initialMostVisitedCars: MostVisitedCarStat[] // Use new interface
+    handleChangePassword: (formData: FormData, lang: string) => Promise<{ status: string; message: string }>
     handleLogout: (lang: string) => Promise<void>
     handleDeleteCar: (carId: string, lang: string) => Promise<void>
-    handleAddCar: (formData: FormData, lang: string) => Promise<void>
+    handleAddCar: (formData: FormData, lang: string) => Promise<{ status: string; message: string }>
 }
 
 export function AdminDashboardClient({
@@ -69,38 +81,52 @@ export function AdminDashboardClient({
     handleDeleteCar,
     handleAddCar,
 }: AdminDashboardClientProps) {
-    const { t } = useTranslation()
+    const { t } = useTranslation("translation")
+    const router = useRouter()
+    const { toast } = useToast()
     const [cars, setCars] = useState<Car[]>(initialCars)
     const [enquiries, setEnquiries] = useState<Enquiry[]>(initialEnquiries)
-    const [mostVisitedCars, setMostVisitedCars] = useState<Car[]>(initialMostVisitedCars)
+    const [mostVisitedCars, setMostVisitedCars] = useState<MostVisitedCarStat[]>(initialMostVisitedCars) // Use new interface
+    const [isTransitioning, startTransition] = useTransition()
 
-    // State for Brand and Model autocomplete in Add New Car form
-    const [addCarBrandInput, setAddCarBrandInput] = useState("")
-    const [addCarModelInput, setAddCarModelInput] = useState("")
-    const [showAddCarBrandSuggestions, setShowAddCarBrandSuggestions] = useState(false)
-    const [showAddCarModelSuggestions, setShowAddCarModelSuggestions] = useState(false)
-    const [constructedCarName, setConstructedCarName] = useState("")
-    const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]) // New state for selected image files
+    const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+    const [newPassword, setNewPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
+    const [passwordError, setPasswordError] = useState("")
+
+    const [showAddCarDialog, setShowAddCarDialog] = useState(false)
+    const [newCarData, setNewCarData] = useState<Partial<Car>>({})
+    const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([])
+    const [addCarError, setAddCarError] = useState("")
+
+    const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false)
+    const [carToDelete, setCarToDelete] = useState<string | null>(null)
 
     const addCarBrandInputRef = useRef<HTMLInputElement>(null)
     const addCarModelInputRef = useRef<HTMLInputElement>(null)
-    const addCarFormRef = useRef<HTMLFormElement>(null) // Ref for the form to reset it
+    const addCarFormRef = useRef<HTMLFormElement>(null)
 
-    // Filtered brands based on addCarBrandInput
-    const filteredAddCarBrands = addCarBrandInput
-        ? carData.filter((car) => car.brand.toLowerCase().startsWith(addCarBrandInput.toLowerCase()))
+    const [showBrandDropdown, setShowBrandDropdown] = useState(false)
+    const [showModelDropdown, setShowModelDropdown] = useState(false)
+
+    const [uploadProgress, setUploadProgress] = useState(0)
+    const [uploadMessage, setUploadMessage] = useState("")
+
+    const [isAddingCar, setIsAddingCar] = useState(false)
+    const [isChangingPassword, setIsChangingPassword] = useState(false)
+    const [isDeletingCar, setIsDeletingCar] = useState(false)
+
+    const filteredAddCarBrands = newCarData.brand
+        ? carData.filter((car) => car.brand.toLowerCase().startsWith(newCarData.brand!.toLowerCase()))
         : carData
 
-    // Get models for the selected brand in Add New Car form
-    const selectedAddCarBrandData = carData.find((car) => car.brand.toLowerCase() === addCarBrandInput.toLowerCase())
+    const selectedAddCarBrandData = carData.find((car) => car.brand.toLowerCase() === newCarData.brand?.toLowerCase())
     const availableAddCarModels = selectedAddCarBrandData ? selectedAddCarBrandData.models : []
 
-    // Filtered models based on addCarModelInput and selected brand
-    const filteredAddCarModels = addCarModelInput
-        ? availableAddCarModels.filter((model) => model.toLowerCase().startsWith(addCarModelInput.toLowerCase()))
+    const filteredAddCarModels = newCarData.model
+        ? availableAddCarModels.filter((model) => model.toLowerCase().startsWith(newCarData.model!.toLowerCase()))
         : availableAddCarModels
 
-    // Update local state when initial props change (e.g., after a Server Action revalidates data)
     useEffect(() => {
         setCars(initialCars)
         setEnquiries(initialEnquiries)
@@ -108,12 +134,12 @@ export function AdminDashboardClient({
     }, [initialCars, initialEnquiries, initialMostVisitedCars])
 
     useEffect(() => {
-        if (addCarBrandInput && addCarModelInput) {
-            setConstructedCarName(`${addCarBrandInput} ${addCarModelInput}`)
+        if (newCarData.brand && newCarData.model) {
+            setConstructedCarName(`${newCarData.brand!} ${newCarData.model!}`)
         } else {
             setConstructedCarName("")
         }
-    }, [addCarBrandInput, addCarModelInput])
+    }, [newCarData.brand, newCarData.model])
 
     const bodyStyles = ["SUV", "Sedan", "Truck", "Coupe", "Hatchback", "Minivan", "Convertible", "Wagon"]
     const drivetrains = ["FWD", "RWD", "AWD", "4WD"]
@@ -121,9 +147,7 @@ export function AdminDashboardClient({
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files
         if (files) {
-            // Append new files to the existing array
             setSelectedImageFiles((prevFiles) => [...prevFiles, ...Array.from(files)])
-            // Clear the input value so the same file can be selected again if needed
             event.target.value = ""
         }
     }
@@ -133,91 +157,184 @@ export function AdminDashboardClient({
     }
 
     const handleSubmitAddCar = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault() // Prevent default form submission
+        event.preventDefault()
 
-        if (!addCarBrandInput || !addCarModelInput) {
-            // TODO: Display a user-facing error message
-            console.error("Car brand and model are required to add a car.")
+        if (!newCarData.brand || !newCarData.model) {
+            toast({
+                title: t("admin_dashboard.add_new_car.validation_error"),
+                description: t("admin_dashboard.add_new_car.brand_model_required"),
+                variant: "destructive",
+            })
             return
         }
 
-        const formData = new FormData(event.currentTarget)
-        formData.set("name", constructedCarName) // Set the constructed name
+        setUploadProgress(0)
+        setUploadMessage("")
+        setAddCarError("")
 
-        // Remove the original 'images' entry if it exists from the default form submission
-        // This is important because if the input had a 'name' attribute, it would add an empty FileList
-        // if no files were selected in the last interaction.
-        formData.delete("images")
+        const initialFormData = new FormData(event.currentTarget)
 
-        // Append all selected files from state
-        selectedImageFiles.forEach((file) => {
-            formData.append("images", file)
-        })
-
-        await handleAddCar(formData, lang)
-
-        // Clear form fields after successful submission
-        if (addCarFormRef.current) {
-            addCarFormRef.current.reset() // Reset the form
+        let imageUrls: string[] = []
+        if (selectedImageFiles.length > 0) {
+            const imageFormData = new FormData()
+            selectedImageFiles.forEach((file) => imageFormData.append("images", file))
+            try {
+                setUploadMessage(t("admin_dashboard.add_new_car.uploading_images"))
+                setUploadProgress(25)
+                imageUrls = await uploadImages(imageFormData)
+                setUploadProgress(75)
+            } catch (error) {
+                console.error("Error uploading images:", error)
+                toast({
+                    title: t("admin_dashboard.add_new_car.upload_failed_title"),
+                    description: t("admin_dashboard.add_new_car.image_upload_failed"),
+                    variant: "destructive",
+                })
+                setUploadProgress(0)
+                setUploadMessage("")
+                return
+            }
         }
-        setAddCarBrandInput("")
-        setAddCarModelInput("")
-        setConstructedCarName("")
-        setSelectedImageFiles([]) // Clear selected images
+
+        const carFormData = new FormData()
+        for (const [key, value] of initialFormData.entries()) {
+            if (key !== "images") {
+                carFormData.append(key, value)
+            }
+        }
+
+        carFormData.set("brand", newCarData.brand!)
+        carFormData.set("model", newCarData.model!)
+        carFormData.set("name", `${newCarData.brand!} ${newCarData.model!}`)
+
+        imageUrls.forEach((url) => carFormData.append("image_url", url))
+
+        setIsAddingCar(true)
+        startTransition(async () => {
+            try {
+                setUploadMessage(t("admin_dashboard.add_new_car.processing_car_data"))
+                const result = await handleAddCar(carFormData, lang)
+                setUploadProgress(100)
+
+                if (result?.status === "success") {
+                    toast({
+                        title: t("admin_dashboard.add_new_car.upload_success_title"),
+                        description: result.message,
+                        variant: "default",
+                    })
+                } else {
+                    toast({
+                        title: t("admin_dashboard.add_new_car.upload_failed_title"),
+                        description: result?.message || t("admin_dashboard.add_new_car.failed_to_add_car"),
+                        variant: "destructive",
+                    })
+                }
+            } finally {
+                setIsAddingCar(false)
+                if (addCarFormRef.current) {
+                    addCarFormRef.current.reset()
+                }
+                setNewCarData({})
+                setSelectedImageFiles([])
+                setTimeout(() => {
+                    setUploadProgress(0)
+                    setUploadMessage("")
+                }, 3000)
+                router.refresh()
+            }
+        })
     }
+
+    const handleDeleteCarAction = async (carId: string) => {
+        setIsDeletingCar(true)
+        startTransition(async () => {
+            try {
+                await handleDeleteCar(carId, lang)
+                toast({
+                    title: t("admin_dashboard.manage_cars.delete_success_title"),
+                    description: t("admin_dashboard.manage_cars.delete_success_message"),
+                    variant: "default",
+                })
+            } finally {
+                setIsDeletingCar(false)
+                router.refresh()
+            }
+        })
+    }
+
+    const handleChangePasswordAction = async (formData: FormData) => {
+        setIsChangingPassword(true)
+        startTransition(async () => {
+            try {
+                const result = await handleChangePassword(formData, lang)
+                if (result?.status === "success") {
+                    toast({
+                        title: t("admin_dashboard.change_password.success_title"),
+                        description: result.message,
+                        variant: "default",
+                    })
+                } else {
+                    toast({
+                        title: t("admin_dashboard.change_password.error_title"),
+                        description: result?.message || t("admin_dashboard.change_password.failed_to_change_password"),
+                        variant: "destructive",
+                    })
+                }
+            } finally {
+                setIsChangingPassword(false)
+                router.refresh()
+            }
+        })
+    }
+
+    const handleLogoutAction = async () => {
+        startTransition(async () => {
+            await handleLogout(lang)
+            router.push(`/${lang}/admin`)
+        })
+    }
+
+    const [constructedCarName, setConstructedCarName] = useState("")
 
     return (
         <div className="container mx-auto py-12 px-4 md:px-6 lg:px-8 bg-background text-foreground">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-bold">{t("admin_dashboard.title")}</h1>
-                <form action={() => handleLogout(lang)}>
+                <form action={handleLogoutAction}>
                     <Button variant="outline" className="bg-black text-white">
                         {t("admin_dashboard.logout")}
                     </Button>
                 </form>
             </div>
 
-            {/* Add New Car Section */}
             <Card className="mb-12 bg-card text-card-foreground">
                 <CardHeader>
                     <CardTitle>{t("admin_dashboard.add_new_car.title")}</CardTitle>
                     <CardDescription>{t("admin_dashboard.add_new_car.description")}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {status === "success" && message && (
-                        <div className="bg-green-100 text-green-800 p-4 rounded-md mb-4 text-center">{message}</div>
-                    )}
-                    {status === "error" && message && (
-                        <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">{message}</div>
-                    )}
+                    {addCarError && <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">{addCarError}</div>}
                     <form onSubmit={handleSubmitAddCar} className="space-y-4" ref={addCarFormRef}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {/* Brand Autocomplete for Add New Car */}
                             <div className="space-y-2 relative">
                                 <Label htmlFor="brand">{t("admin_dashboard.add_new_car.brand")}</Label>
                                 <Input
                                     id="brand"
-                                    name="brand" // Important for form submission
+                                    name="brand"
                                     type="text"
                                     placeholder={t("admin_dashboard.add_new_car.placeholder_brand")}
-                                    value={addCarBrandInput}
+                                    value={newCarData.brand || ""}
                                     onChange={(e) => {
-                                        setAddCarBrandInput(e.target.value)
-                                        setShowAddCarBrandSuggestions(true)
-                                        setAddCarModelInput("") // Clear model when brand changes
+                                        setNewCarData({ ...newCarData, brand: e.target.value })
+                                        setConstructedCarName("")
+                                        setShowBrandDropdown(true)
                                     }}
-                                    onFocus={() => setShowAddCarBrandSuggestions(true)}
-                                    onBlur={(e) => {
-                                        setTimeout(() => {
-                                            if (!e.currentTarget.contains(document.activeElement)) {
-                                                setShowAddCarBrandSuggestions(false)
-                                            }
-                                        }, 100)
-                                    }}
+                                    onFocus={() => setShowBrandDropdown(true)}
+                                    onBlur={() => setTimeout(() => setShowBrandDropdown(false), 100)}
                                     autoComplete="off"
                                     ref={addCarBrandInputRef}
                                 />
-                                {showAddCarBrandSuggestions && filteredAddCarBrands.length > 0 && (
+                                {showBrandDropdown && filteredAddCarBrands.length > 0 && (
                                     <ul className="absolute z-10 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
                                         {filteredAddCarBrands.map((car) => (
                                             <li
@@ -225,10 +342,10 @@ export function AdminDashboardClient({
                                                 className="px-4 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground"
                                                 onMouseDown={(e) => {
                                                     e.preventDefault()
-                                                    setAddCarBrandInput(car.brand)
-                                                    setShowAddCarBrandSuggestions(false)
-                                                    setAddCarModelInput("") // Clear model when brand is selected
-                                                    addCarModelInputRef.current?.focus() // Focus model input after brand selection
+                                                    setNewCarData({ ...newCarData, brand: car.brand })
+                                                    setConstructedCarName("")
+                                                    setShowBrandDropdown(false)
+                                                    addCarModelInputRef.current?.focus()
                                                 }}
                                             >
                                                 {car.brand}
@@ -238,33 +355,27 @@ export function AdminDashboardClient({
                                 )}
                             </div>
 
-                            {/* Model Autocomplete for Add New Car (only visible if a brand is selected/typed) */}
-                            {addCarBrandInput && (
+                            {newCarData.brand && (
                                 <div className="space-y-2 relative">
                                     <Label htmlFor="model">{t("admin_dashboard.add_new_car.model")}</Label>
                                     <Input
                                         id="model"
-                                        name="model" // Important for form submission
+                                        name="model"
                                         type="text"
                                         placeholder={t("admin_dashboard.add_new_car.placeholder_model")}
-                                        value={addCarModelInput}
+                                        value={newCarData.model || ""}
                                         onChange={(e) => {
-                                            setAddCarModelInput(e.target.value)
-                                            setShowAddCarModelSuggestions(true)
+                                            setNewCarData({ ...newCarData, model: e.target.value })
+                                            setConstructedCarName("")
+                                            setShowModelDropdown(true)
                                         }}
-                                        onFocus={() => setShowAddCarModelSuggestions(true)}
-                                        onBlur={(e) => {
-                                            setTimeout(() => {
-                                                if (!e.currentTarget.contains(document.activeElement)) {
-                                                    setShowAddCarModelSuggestions(false)
-                                                }
-                                            }, 100)
-                                        }}
-                                        disabled={!addCarBrandInput}
+                                        onFocus={() => setShowModelDropdown(true)}
+                                        onBlur={() => setTimeout(() => setShowModelDropdown(false), 100)}
+                                        disabled={!newCarData.brand}
                                         autoComplete="off"
                                         ref={addCarModelInputRef}
                                     />
-                                    {showAddCarModelSuggestions && filteredAddCarModels.length > 0 && (
+                                    {showModelDropdown && filteredAddCarModels.length > 0 && (
                                         <ul className="absolute z-10 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
                                             {filteredAddCarModels.map((model) => (
                                                 <li
@@ -272,8 +383,9 @@ export function AdminDashboardClient({
                                                     className="px-4 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground"
                                                     onMouseDown={(e) => {
                                                         e.preventDefault()
-                                                        setAddCarModelInput(model)
-                                                        setShowAddCarModelSuggestions(false)
+                                                        setNewCarData({ ...newCarData, model: model })
+                                                        setConstructedCarName("")
+                                                        setShowModelDropdown(false)
                                                     }}
                                                 >
                                                     {model}
@@ -290,6 +402,7 @@ export function AdminDashboardClient({
                                     id="images"
                                     name="images"
                                     type="file"
+                                    multiple
                                     accept="image/*"
                                     onChange={handleImageChange}
                                     placeholder={t("admin_dashboard.add_new_car.placeholder_image_files")}
@@ -349,7 +462,24 @@ export function AdminDashboardClient({
                                     placeholder={t("admin_dashboard.add_new_car.placeholder_price")}
                                 />
                             </div>
-
+                            <div className="space-y-2">
+                                <Label htmlFor="trim">{t("admin_dashboard.add_new_car.trim")}</Label>
+                                <Input
+                                    id="trim"
+                                    name="trim"
+                                    type="text"
+                                    placeholder={t("admin_dashboard.add_new_car.placeholder_trim")}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="cylinders">{t("admin_dashboard.add_new_car.cylinders")}</Label>
+                                <Input
+                                    id="cylinders"
+                                    name="cylinders"
+                                    type="number"
+                                    placeholder={t("admin_dashboard.add_new_car.placeholder_cylinders")}
+                                />
+                            </div>
                             <div className="space-y-2">
                                 <Label htmlFor="body_style">{t("admin_dashboard.add_new_car.body_style")}</Label>
                                 <Select name="body_style" defaultValue="null">
@@ -392,27 +522,26 @@ export function AdminDashboardClient({
                                 rows={4}
                             />
                         </div>
-                        <Button type="submit" className="w-full">
+                        {(isAddingCar || uploadProgress > 0) && (
+                            <div className="space-y-2">
+                                <Progress value={uploadProgress} className="w-full" />
+                                {uploadMessage && <p className="text-sm text-center text-muted-foreground">{uploadMessage}</p>}
+                            </div>
+                        )}
+                        <Button type="submit" className="w-full" disabled={isAddingCar}>
                             {t("admin_dashboard.add_new_car.add_car")}
                         </Button>
                     </form>
                 </CardContent>
             </Card>
 
-            {/* Change Password Section */}
             <Card className="mb-12 bg-card text-card-foreground">
                 <CardHeader>
                     <CardTitle>{t("admin_dashboard.change_password.title")}</CardTitle>
                     <CardDescription>{t("admin_dashboard.change_password.description")}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {status === "success" && message && (
-                        <div className="bg-green-100 text-green-800 p-4 rounded-md mb-4 text-center">{message}</div>
-                    )}
-                    {status === "error" && message && (
-                        <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">{message}</div>
-                    )}
-                    <form action={(formData) => handleChangePassword(formData, lang)} className="space-y-4">
+                    <form action={handleChangePasswordAction} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="new_password">{t("admin_dashboard.change_password.new_password")}</Label>
                             <Input id="new_password" name="new_password" type="password" required />
@@ -421,14 +550,15 @@ export function AdminDashboardClient({
                             <Label htmlFor="confirm_password">{t("admin_dashboard.change_password.confirm_new_password")}</Label>
                             <Input id="confirm_password" name="confirm_password" type="password" required />
                         </div>
-                        <Button type="submit" className="w-full">
-                            {t("admin_dashboard.change_password.change_password_button")}
+                        <Button type="submit" className="w-full" disabled={isChangingPassword}>
+                            {isChangingPassword
+                                ? t("admin_dashboard.change_password.changing_password")
+                                : t("admin_dashboard.change_password.change_password_button")}
                         </Button>
                     </form>
                 </CardContent>
             </Card>
 
-            {/* Manage Cars Section */}
             <Card className="mb-12 bg-card text-card-foreground">
                 <CardHeader>
                     <CardTitle>{t("admin_dashboard.manage_cars.title")}</CardTitle>
@@ -463,16 +593,20 @@ export function AdminDashboardClient({
                                             {car.model || "N/A"}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
+                                            <span className="font-semibold">{t("admin_dashboard.manage_cars.table_trim")}:</span>{" "}
+                                            {car.trim || "N/A"}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            <span className="font-semibold">{t("admin_dashboard.manage_cars.table_cylinders")}:</span>{" "}
+                                            {car.cylinders || "N/A"}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
                                             <span className="font-semibold">{t("admin_dashboard.manage_cars.table_mileage")}:</span>{" "}
                                             {car.mileage.toLocaleString()} miles
                                         </p>
                                         <p className="text-sm text-muted-foreground">
                                             <span className="font-semibold">{t("admin_dashboard.manage_cars.table_year")}:</span>{" "}
                                             {car.model_year}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            <span className="font-semibold">{t("admin_dashboard.manage_cars.table_price")}:</span>{" "}
-                                            {car.price !== null ? `$${car.price.toLocaleString()}` : t("cars_page.call_for_price")}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
                                             <span className="font-semibold">{t("admin_dashboard.manage_cars.table_vin")}:</span> {car.vin}
@@ -491,9 +625,11 @@ export function AdminDashboardClient({
                                         )}
                                     </CardContent>
                                     <CardFooter className="p-4 pt-0">
-                                        <form action={() => handleDeleteCar(car.id, lang)} className="w-full">
-                                            <Button variant="destructive" size="sm" className="w-full">
-                                                {t("admin_dashboard.manage_cars.delete")}
+                                        <form action={() => handleDeleteCarAction(car.id)} className="w-full">
+                                            <Button variant="destructive" size="sm" className="w-full" disabled={isDeletingCar}>
+                                                {isDeletingCar
+                                                    ? t("admin_dashboard.manage_cars.deleting")
+                                                    : t("admin_dashboard.manage_cars.delete")}
                                             </Button>
                                         </form>
                                     </CardFooter>
@@ -506,7 +642,6 @@ export function AdminDashboardClient({
                 </CardContent>
             </Card>
 
-            {/* Most Visited Cars Section */}
             <Card className="mb-12 bg-card text-card-foreground">
                 <CardHeader>
                     <CardTitle>{t("admin_dashboard.most_visited_cars.title")}</CardTitle>
@@ -516,20 +651,22 @@ export function AdminDashboardClient({
                     {mostVisitedCars && mostVisitedCars.length > 0 ? (
                         <div className="overflow-x-auto">
                             <Table>
-                                <TableFooter>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCaption>{t("admin_dashboard.most_visited_cars.table_name")}</TableCaption>
-                                        <TableCaption>{t("admin_dashboard.most_visited_cars.table_views")}</TableCaption>
+                                        <TableHead>{t("admin_dashboard.most_visited_cars.table_name")}</TableHead>
+                                        <TableHead className="text-right">{t("admin_dashboard.most_visited_cars.table_views")}</TableHead>
                                     </TableRow>
-                                </TableFooter>
-                                <TableCaption>
+                                </TableHeader>
+                                <TableBody>
                                     {mostVisitedCars.map((car) => (
-                                        <TableRow key={car.id}>
-                                            <TableCaption className="font-medium">{car.name}</TableCaption>
-                                            <TableCaption>{car.views}</TableCaption>
+                                        <TableRow key={car.car_id}>
+                                            <TableCell className="font-medium">{car.car_name}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Badge variant="secondary">{car.views}</Badge>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
-                                </TableCaption>
+                                </TableBody>
                             </Table>
                         </div>
                     ) : (
@@ -538,7 +675,6 @@ export function AdminDashboardClient({
                 </CardContent>
             </Card>
 
-            {/* User Inquiries Section */}
             <Card className="bg-card text-card-foreground">
                 <CardHeader>
                     <CardTitle>{t("admin_dashboard.user_inquiries.title")}</CardTitle>
@@ -551,7 +687,8 @@ export function AdminDashboardClient({
                                 <Card key={enquiry.id} className="rounded-lg shadow-md bg-card text-card-foreground flex flex-col">
                                     <CardContent className="flex-grow p-4 space-y-2">
                                         <p className="text-lg font-bold">
-                                            {t("admin_dashboard.user_inquiries.table_name")}: {enquiry.name}
+                                            {t("admin_dashboard.user_inquiries.table_name")}:{" "}
+                                            {enquiry.car_name_at_inquiry || t("admin_dashboard.user_inquiries.car_deleted")}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
                                             <span className="font-semibold">{t("admin_dashboard.user_inquiries.table_email")}:</span>{" "}
@@ -563,7 +700,7 @@ export function AdminDashboardClient({
                                         </p>
                                         <p className="text-sm text-muted-foreground">
                                             <span className="font-semibold">{t("admin_dashboard.user_inquiries.table_car_inquired")}:</span>{" "}
-                                            {enquiry.cars?.name || t("admin_dashboard.user_inquiries.car_deleted")}
+                                            {enquiry.car_name_at_inquiry || t("admin_dashboard.user_inquiries.car_deleted")}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
                                             <span className="font-semibold">{t("admin_dashboard.user_inquiries.table_date")}:</span>{" "}

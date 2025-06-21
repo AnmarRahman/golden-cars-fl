@@ -1,12 +1,12 @@
 import { Logo } from "./logo"
-import { getTranslation } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 // Removed: import { headers } from "next/headers" // No longer needed
 
 export async function Footer({ lang }: { lang: string }) {
   // Accept lang as a prop
   // Removed: const headerList = await headers()
   // Removed: const lang = headerList.get("x-next-intl-locale") || "en"
-  const { t } = await getTranslation(lang, "translation")
+  const { t } = await useTranslation(lang, "translation")
 
   return (
     <footer className="bg-black text-white py-8 px-6 md:px-8 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-800">

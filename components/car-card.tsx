@@ -21,6 +21,8 @@ interface Car {
   drivetrain: string | null
   brand: string | null // Added brand
   model: string | null // Added model
+  trim: string | null // Added trim
+  cylinders: number | null // Added cylinders
 }
 
 interface CarCardProps {
@@ -68,6 +70,16 @@ export function CarCard({ car }: CarCardProps) {
             <span className="font-semibold">{t("cars_page.model")}:</span> {car.model}
           </p>
         )}
+        {car.trim && (
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold">{t("cars_page.trim")}:</span> {car.trim}
+          </p>
+        )}
+        {car.cylinders && (
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold">{t("cars_page.cylinders")}:</span> {car.cylinders}
+          </p>
+        )}
         {car.body_style && (
           <p className="text-sm text-muted-foreground">
             <span className="font-semibold">{t("cars_page.body_style")}:</span>{" "}
@@ -88,7 +100,7 @@ export function CarCard({ car }: CarCardProps) {
         <Button onClick={handleViewDetails} className="w-full">
           {t("cars_page.view_details")}
         </Button>
-        <Link href={`/${i18n.language}/cars/${car.id}/inquire`} className="w-full">
+        <Link href={`/${i18n.language}/cars/${car.id}/inquire?source=search`} className="w-full">
           <Button variant="outline" className="w-full bg-black text-white">
             {t("cars_page.inquire_now")}
           </Button>

@@ -4,8 +4,9 @@ import { Inter } from "next/font/google"
 import "../globals.css" // Note the relative path change
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { getI18nServerInstance } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 import { I18nProvider } from "@/components/i18n-provider"
+import { Toaster } from "@/components/ui/toaster" // Make sure this is imported
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,19 +22,19 @@ export async function generateStaticParams() {
 
 export default async function RootLayout(props: {
   children: React.ReactNode
-  params: Promise<{ lang: string }> // Type params as a Promise
+  params: { lang: string } // Type params as a Promise
 }) {
   const { children, params } = props
-  const { lang } = await params // Await params to get the lang property
+  const { lang } = params // Await params to get the lang property
 
   // Initialize server-side i18n for initial render and server components.
-  await getI18nServerInstance(lang)
+  await useTranslation(lang, "translation")
 
   return (
     <html lang={lang}>
       <body className={inter.className}>
         {/* Pass the server-rendered language to the client-side I18nProvider */}
-        <I18nProvider initialLng={lang}>
+        <I18nProvider lang={lang} namespaces={["translation"]}>
           <div className="flex flex-col min-h-screen">
             <Header lang={lang} />
             <main className="flex-1">{children}</main>
@@ -41,6 +42,7 @@ export default async function RootLayout(props: {
             <Footer lang={lang} />
           </div>
         </I18nProvider>
+        <Toaster /> {/* Add this line */}
       </body>
     </html>
   )

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { getTranslation } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 
 export default async function AdminLoginPage({
   params,
@@ -15,7 +15,7 @@ export default async function AdminLoginPage({
 }) {
   const { lang } = await params
   const { error } = await searchParams // Await searchParams here
-  const { t } = await getTranslation(lang, "translation")
+  const { t } = await useTranslation(lang, "translation")
 
   const supabase = await createSupabaseServerComponentClient()
 

@@ -23,6 +23,8 @@ interface SearchFormProps {
     drivetrain?: string
     brand?: string // Added brand
     model?: string // Added model
+    trim?: string // Added trim
+    cylinders?: string // Added cylinders
   }
 }
 
@@ -39,6 +41,8 @@ export function SearchForm({ initialSearchParams }: SearchFormProps) {
   const [priceRange, setPriceRange] = useState(initialSearchParams?.price_range || "any_price")
   const [bodyStyle, setBodyStyle] = useState(initialSearchParams?.body_style || "any_body_style")
   const [drivetrain, setDrivetrain] = useState(initialSearchParams?.drivetrain || "any_drivetrain")
+  const [trim, setTrim] = useState(initialSearchParams?.trim || "") // New state for trim
+  const [cylinders, setCylinders] = useState(initialSearchParams?.cylinders || "") // New state for cylinders
 
   // State for Brand and Model autocomplete
   const [brandInput, setBrandInput] = useState(initialSearchParams?.brand || "")
@@ -75,6 +79,8 @@ export function SearchForm({ initialSearchParams }: SearchFormProps) {
     setDrivetrain(searchParams.get("drivetrain") || "any_drivetrain")
     setBrandInput(searchParams.get("brand") || "")
     setModelInput(searchParams.get("model") || "")
+    setTrim(searchParams.get("trim") || "") // Update trim from URL
+    setCylinders(searchParams.get("cylinders") || "") // Update cylinders from URL
   }, [searchParams])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -90,6 +96,8 @@ export function SearchForm({ initialSearchParams }: SearchFormProps) {
     if (drivetrain && drivetrain !== "any_drivetrain") params.set("drivetrain", drivetrain)
     if (brandInput) params.set("brand", brandInput) // Add brand to params
     if (modelInput) params.set("model", modelInput) // Add model to params
+    if (trim) params.set("trim", trim) // Add trim to params
+    if (cylinders) params.set("cylinders", cylinders) // Add cylinders to params
 
     router.push(`/${i18n.language}/cars?${params.toString()}`)
   }
@@ -105,6 +113,8 @@ export function SearchForm({ initialSearchParams }: SearchFormProps) {
     setDrivetrain("any_drivetrain")
     setBrandInput("") // Reset brand
     setModelInput("") // Reset model
+    setTrim("") // Reset trim
+    setCylinders("") // Reset cylinders
     router.push(`/${i18n.language}/cars`) // Redirect to /cars with no params
   }
 
@@ -316,6 +326,28 @@ export function SearchForm({ initialSearchParams }: SearchFormProps) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        {/* New Trim Filter */}
+        <div className="space-y-2">
+          <Label htmlFor="trim">{t("search_form.trim")}</Label>
+          <Input
+            id="trim"
+            type="text"
+            placeholder={t("search_form.placeholder_trim")}
+            value={trim}
+            onChange={(e) => setTrim(e.target.value)}
+          />
+        </div>
+        {/* New Cylinders Filter */}
+        <div className="space-y-2">
+          <Label htmlFor="cylinders">{t("search_form.cylinders")}</Label>
+          <Input
+            id="cylinders"
+            type="number"
+            placeholder={t("search_form.placeholder_cylinders")}
+            value={cylinders}
+            onChange={(e) => setCylinders(e.target.value)}
+          />
         </div>
       </div>
       <div className="flex justify-center gap-4">

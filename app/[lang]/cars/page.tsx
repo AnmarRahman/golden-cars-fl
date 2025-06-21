@@ -22,6 +22,8 @@ interface Car {
   drivetrain: string | null // Added drivetrain
   brand: string | null // Added brand
   model: string | null // Added model
+  trim: string | null // Added trim
+  cylinders: number | null // Added cylinders
 }
 
 // Function to fetch cars from Supabase using the client-side client
@@ -36,13 +38,27 @@ async function getCarsClient(searchParams: {
   drivetrain?: string
   brand?: string // Added brand
   model?: string // Added model
+  trim?: string // Added trim
+  cylinders?: string // Added cylinders
 }): Promise<Car[]> {
   const supabase = createClientClient()
   // Corrected: Use the generic type parameter for select to specify the expected row type
   let query = supabase.from("cars").select<"*" | keyof Car, Car>("*")
 
-  const { q, model_year, min_mileage, max_mileage, vin, price_range, body_style, drivetrain, brand, model } =
-    searchParams
+  const {
+    q,
+    model_year,
+    min_mileage,
+    max_mileage,
+    vin,
+    price_range,
+    body_style,
+    drivetrain,
+    brand,
+    model,
+    trim,
+    cylinders,
+  } = searchParams
 
   if (q && typeof q === "string") {
     query = query.ilike("name", `%${q}%`)
@@ -96,6 +112,16 @@ async function getCarsClient(searchParams: {
   // Apply model filter
   if (model && typeof model === "string") {
     query = query.ilike("model", `%${model}%`)
+  }
+
+  // Apply trim filter
+  if (trim && typeof trim === "string") {
+    query = query.ilike("trim", `%${trim}%`)
+  }
+
+  // Apply cylinders filter
+  if (cylinders && typeof cylinders === "string") {
+    query = query.eq("cylinders", Number.parseInt(cylinders))
   }
 
   const { data, error } = await query.order("created_at", { ascending: false })

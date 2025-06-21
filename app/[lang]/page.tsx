@@ -2,13 +2,13 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { SearchForm } from "@/components/search-form"
 import { Suspense } from "react"
-import { getTranslation } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Package, Globe, Truck } from "lucide-react" // Import icons
 
 export default async function HomePage(props: { params: Promise<{ lang: string }> }) {
   const { lang } = await props.params // Await params to get the lang property
-  const { t } = await getTranslation(lang, "translation")
+  const { t } = await useTranslation(lang, "translation")
 
   return (
     <div className="flex flex-col items-center justify-center bg-background">

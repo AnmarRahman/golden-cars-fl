@@ -4,15 +4,26 @@ import { createServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function incrementCarView(carId: string, lang: string) {
-    const supabase = createServerClient() // Use the service role client for direct database updates
+    const supabase = createServerClient()
 
-    const { data, error } = await supabase
+    // Fetch current views and name to ensure the trigger has the latest data
+    const { data: currentCar, error: fetchError } = await supabase
         .from("cars")
-        .update({ views: (await supabase.from("cars").select("views").eq("id", carId).single()).data?.views! + 1 })
+        .select("views, name")
         .eq("id", carId)
+        .single()
 
-    if (error) {
-        console.error("Error incrementing car view:", error.message)
+    if (fetchError || !currentCar) {
+        console.error("Error fetching car for view increment:", fetchError?.message || "Car not found")
+        return
+    }
+
+    const newViews = currentCar.views + 1
+
+    const { error: updateError } = await supabase.from("cars").update({ views: newViews }).eq("id", carId)
+
+    if (updateError) {
+        console.error("Error incrementing car view:", updateError.message)
     } else {
         // Revalidate the admin dashboard path to show updated view counts
         revalidatePath(`/${lang}/admin/dashboard`)

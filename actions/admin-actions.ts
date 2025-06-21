@@ -3,7 +3,6 @@
 import { createServerClient, createSupabaseServerComponentClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { uploadImages } from "@/actions/upload-images" // Import uploadImages
 
 export async function handleChangePassword(formData: FormData, lang: string) {
     const newPassword = formData.get("new_password") as string
@@ -11,7 +10,7 @@ export async function handleChangePassword(formData: FormData, lang: string) {
 
     if (newPassword !== confirmPassword) {
         console.error("Password change error: Passwords do not match.")
-        redirect(`/${lang}/admin/dashboard?status=error&message=${encodeURIComponent("Passwords do not match.")}`)
+        return { status: "error", message: "Passwords do not match." }
     }
 
     const supabase = await createSupabaseServerComponentClient()
@@ -21,15 +20,16 @@ export async function handleChangePassword(formData: FormData, lang: string) {
 
     if (error) {
         console.error("Password change error:", error.message)
-        redirect(
-            `/${lang}/admin/dashboard?status=error&message=${encodeURIComponent(`Failed to change password: ${error.message}`)}`,
-        )
+        return { status: "error", message: `Failed to change password: ${error.message}` }
     }
 
     revalidatePath(`/${lang}/admin/dashboard`)
-    redirect(`/${lang}/admin/dashboard?status=success&message=${encodeURIComponent("Password updated successfully!")}`)
+    return { status: "success", message: "Password updated successfully!" }
 }
 
+/**
+ * Handles logging out the admin user.
+ */
 export async function handleLogout(lang: string) {
     const supabase = await createSupabaseServerComponentClient()
     await supabase.auth.signOut()
@@ -59,21 +59,19 @@ export async function handleAddCar(formData: FormData, lang: string) {
     const drivetrain = formData.get("drivetrain") as string
     const brand = formData.get("brand") as string
     const model = formData.get("model") as string
+    const trim = formData.get("trim") as string
+    const cylindersString = formData.get("cylinders") as string
 
-    let imageUrls: string[] = []
-    try {
-        imageUrls = await uploadImages(formData)
-    } catch (uploadError) {
-        console.error("Failed to upload images:", uploadError)
-        redirect(`/${lang}/admin/dashboard?status=error&message=${encodeURIComponent("Failed to upload images.")}`)
-    }
+    // Retrieve image URLs directly from formData, as they were already uploaded by the client
+    const imageUrls = formData.getAll("image_url") as string[]
 
     const price = priceString ? Number.parseFloat(priceString) : null
+    const cylinders = cylindersString ? Number.parseInt(cylindersString) : null
 
     const supabase = createServerClient()
     const { error } = await supabase.from("cars").insert({
         name,
-        image_url: imageUrls,
+        image_url: imageUrls, // This will now be a proper string array
         mileage,
         vin,
         description,
@@ -83,16 +81,16 @@ export async function handleAddCar(formData: FormData, lang: string) {
         drivetrain: drivetrain === "null" ? null : drivetrain,
         brand: brand || null,
         model: model || null,
+        trim: trim || null,
+        cylinders: cylinders,
     })
 
     if (error) {
         console.error("Error adding car:", error.message)
-        redirect(
-            `/${lang}/admin/dashboard?status=error&message=${encodeURIComponent(`Failed to add car: ${error.message}`)}`,
-        )
+        return { status: "error", message: `Failed to add car: ${error.message}` }
     } else {
         revalidatePath(`/${lang}/admin/dashboard`)
         revalidatePath(`/${lang}/cars`)
-        redirect(`/${lang}/admin/dashboard?status=success&message=${encodeURIComponent("Car added successfully!")}`)
+        return { status: "success", message: "Car added successfully!" }
     }
 }
