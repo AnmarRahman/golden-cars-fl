@@ -1,13 +1,13 @@
-import { createServerClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+"use client" // This component needs to be a Client Component to use useEffect and useRef
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { useTranslation } from "@/lib/i18n"
-import { sendEmail } from "@/actions/send-email"
+import { useTranslation } from "react-i18next" // Use useTranslation for client component
 import { incrementCarView } from "@/actions/car-views"
+import { useEffect, useRef, useState } from "react" // Import useEffect, useRef, useState
+import { submitInquiry } from "@/actions/inquiry-actions" // Import the new server action
 
 interface Car {
   id: string
@@ -25,28 +25,65 @@ interface Car {
   cylinders: number | null // Added cylinders
 }
 
-async function getCarDetails(carId: string): Promise<Car | null> {
-  const supabase = createServerClient()
-  const { data, error } = await supabase.from("cars").select("*").eq("id", carId).single()
-
-  if (error) {
-    console.error("Error fetching car details:", error)
+// This function needs to be a server function if it's called directly in a Server Component.
+// However, since InquirePage is now a client component, we'll fetch car details client-side or pass them as props.
+// For simplicity and to keep the structure, we'll make this a client-side fetch or assume data is passed.
+// For this example, I'll adapt it to be called client-side.
+async function getCarDetailsClient(carId: string): Promise<Car | null> {
+  const response = await fetch(`/api/cars/${carId}`) // Assuming you have an API route for car details
+  if (!response.ok) {
+    console.error("Error fetching car details:", response.statusText)
     return null
   }
+  const data = await response.json()
   return data as Car
 }
 
-export default async function InquirePage({
+export default function InquirePage({
   params,
   searchParams,
 }: {
   params: { id: string; lang: string }
-  searchParams: { status?: string; source?: string } // Added source to searchParams
+  searchParams: { status?: string; source?: string }
 }) {
   const { id, lang } = params
-  const { t } = await useTranslation(lang, "translation")
-  const car = await getCarDetails(id)
+  const { t } = useTranslation() // Use useTranslation for client component
+  const [car, setCar] = useState<Car | null>(null)
+  const [loadingCar, setLoadingCar] = useState(true)
+
+  const hasViewIncremented = useRef(false) // Ref to prevent double increment in Strict Mode
   const source = searchParams.source // Get the source from query parameters
+
+  useEffect(() => {
+    const fetchCar = async () => {
+      setLoadingCar(true)
+      const carData = await getCarDetailsClient(id) // Fetch car details client-side
+      setCar(carData)
+      setLoadingCar(false)
+    }
+
+    fetchCar()
+
+    // Increment view only if source is 'search' and not already incremented
+    if (source === "search" && !hasViewIncremented.current) {
+      incrementCarView(id, lang)
+      hasViewIncremented.current = true
+    }
+
+    // Cleanup function for Strict Mode in development
+    return () => {
+      hasViewIncremented.current = false
+    }
+  }, [id, lang, source]) // Dependencies for useEffect
+
+  if (loadingCar) {
+    return (
+      <div className="container mx-auto py-12 px-4 md:px-6 lg:px-8 text-center bg-background text-foreground">
+        <h1 className="text-3xl font-bold mb-4">{t("common.loading")}</h1>
+        <p className="text-muted-foreground">{t("common.please_wait")}</p>
+      </div>
+    )
+  }
 
   if (!car) {
     return (
@@ -55,73 +92,6 @@ export default async function InquirePage({
         <p className="text-muted-foreground">{t("inquire_page.car_not_found_description")}</p>
       </div>
     )
-  }
-
-  const handleInquiry = async (formData: FormData) => {
-    "use server"
-
-    const { t: tAction } = await useTranslation(lang, "translation")
-
-    const name = formData.get("name") as string
-    const email = formData.get("email") as string
-    const phone_number = formData.get("phone_number") as string
-    const message = formData.get("message") as string
-
-    // Increment car view count ONLY if the inquiry originated from search results
-    if (source === "search") {
-      await incrementCarView(car.id, lang)
-    }
-
-    const supabase = createServerClient()
-    const { error } = await supabase.from("enquiries").insert({
-      name,
-      email,
-      phone_number,
-      car_id: car.id,
-      car_name_at_inquiry: car.name, // Store the car name at the time of inquiry
-      message,
-    })
-
-    if (error) {
-      console.error("Error submitting inquiry:", error.message)
-      redirect(`/${lang}/cars/${car.id}/inquire?status=error`)
-    }
-
-    // Send email notification to the dealership
-    const dealershipEmailResult = await sendEmail({
-      to: "goldencarsfl@gmail.com", // Dealership email
-      subject: `New Car Inquiry: ${car.name} (${car.model_year}) from ${name}`,
-      html: `
-        <p>You have a new inquiry for the car: <strong>${car.name} (${car.model_year})</strong>.</p>
-        <p><strong>Customer Name:</strong> ${name}</p>
-        <p><strong>Customer Email:</strong> ${email}</p>
-        <p><strong>Customer Phone:</strong> ${phone_number || "N/A"}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message}</p>
-        <br/>
-        <p>Car VIN: ${car.vin}</p>
-        <p>Car Mileage: ${car.mileage.toLocaleString()} miles</p>
-        <p>Car Price: ${car.price !== null ? `$${car.price.toLocaleString()}` : "Call for Price"}</p>
-        ${car.body_style ? `<p>Car Body Style: ${tAction(`search_form.${car.body_style.toLowerCase()}`)}</p>` : ""}
-        ${car.drivetrain ? `<p>Car Drivetrain: ${tAction(`search_form.${car.drivetrain.toLowerCase()}`)}</p>` : ""}
-        ${car.trim ? `<p>Car Trim: ${car.trim}</p>` : ""}
-        ${car.cylinders ? `<p>Car Cylinders: ${car.cylinders}</p>` : ""}
-        <p>View car details: <a href="${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/cars/${car.id}">${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/cars/${car.id}</a></p>
-      `,
-      fromDisplayName: "Golden Cars FL", // Friendly name for the sender
-      replyTo: email, // Replies go to the customer's email
-    })
-
-    // Removed customer confirmation email for now as per your request.
-    // const customerEmailResult = await sendEmail({ ... });
-
-    if (!dealershipEmailResult.success) {
-      // Only check dealership email result
-      console.error("Dealership email failed to send.")
-      redirect(`/${lang}/cars/${car.id}/inquire?status=error`)
-    }
-
-    redirect(`/${lang}?inquiryStatus=success`)
   }
 
   const status = searchParams.status
@@ -148,7 +118,20 @@ export default async function InquirePage({
               {t("inquire_page.error_message")}
             </div>
           )}
-          <form action={handleInquiry} className="space-y-6">
+          <form action={submitInquiry} className="space-y-6">
+            {/* Hidden inputs for car details and language */}
+            <input type="hidden" name="lang" value={lang} />
+            <input type="hidden" name="car_id" value={car.id} />
+            <input type="hidden" name="car_name" value={car.name} />
+            <input type="hidden" name="car_model_year" value={car.model_year} />
+            <input type="hidden" name="car_vin" value={car.vin} />
+            <input type="hidden" name="car_mileage" value={car.mileage} />
+            {car.price !== null && <input type="hidden" name="car_price" value={car.price} />}
+            {car.body_style && <input type="hidden" name="car_body_style" value={car.body_style} />}
+            {car.drivetrain && <input type="hidden" name="car_drivetrain" value={car.drivetrain} />}
+            {car.trim && <input type="hidden" name="car_trim" value={car.trim} />}
+            {car.cylinders !== null && <input type="hidden" name="car_cylinders" value={car.cylinders} />}
+
             <div className="space-y-2">
               <Label htmlFor="name">{t("inquire_page.full_name")}</Label>
               <Input id="name" name="name" type="text" placeholder={t("inquire_page.placeholder_full_name")} required />

@@ -1,4 +1,8 @@
 {
+  "common": {
+    "loading": "Cargando detalles del coche...",
+    "please_wait": "Por favor, espere un momento mientras preparamos el formulario de consulta."
+  },
   "hero": {
     "title": "GOLDEN CARS FL",
     "subtitle": "Su destino principal para vehículos de lujo y alto rendimiento en Tampa, FL. Descubra el coche de sus sueños hoy.",

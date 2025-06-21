@@ -1,4 +1,8 @@
 {
+  "common": {
+    "loading": "Loading car details...",
+    "please_wait": "Please wait a moment while we prepare the inquiry form."
+  },
   "admin_dashboard": {
     "add_new_car": {
       "title": "Add New Car",
