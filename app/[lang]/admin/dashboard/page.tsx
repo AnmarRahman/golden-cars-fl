@@ -4,7 +4,13 @@ import { AdminDashboardClient } from "@/components/admin-dashboard-client"
 import { createServerClient, createSupabaseServerComponentClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { useTranslation } from "@/lib/i18n"
-import { handleChangePassword, handleLogout, handleDeleteCar, handleAddCar } from "@/actions/admin-actions"
+import {
+  handleChangePassword,
+  handleLogout,
+  handleDeleteCar,
+  handleAddCar,
+  handleUpdateCarStatus,
+} from "@/actions/admin-actions" // Updated import
 
 interface Car {
   id: string
@@ -23,6 +29,8 @@ interface Car {
   model: string | null
   trim: string | null
   cylinders: number | null
+  custom_id: string | null // New
+  status: string // New
 }
 
 interface Enquiry {
@@ -69,7 +77,7 @@ export default async function AdminDashboardPage({
 
   const { data: carsData, error: carsError } = await supabaseAdminData
     .from("cars")
-    .select("*")
+    .select("*, custom_id, status") // Select new columns
     .order("created_at", { ascending: false })
   if (carsError) console.error("Error fetching cars:", carsError)
 
@@ -89,7 +97,7 @@ export default async function AdminDashboardPage({
 
   const initialCars = (carsData || []) as Car[]
   const initialEnquiries = (enquiriesData || []) as Enquiry[]
-  const initialMostVisitedCars = (mostVisitedCarsData || []) as MostVisitedCarStat[] // Use new interface
+  const initialMostVisitedCars = (mostVisitedCarsData || []) as MostVisitedCarStat[]
 
   return (
     <AdminDashboardClient
@@ -103,6 +111,7 @@ export default async function AdminDashboardPage({
       handleLogout={handleLogout}
       handleDeleteCar={handleDeleteCar}
       handleAddCar={handleAddCar}
+      handleUpdateCarStatus={handleUpdateCarStatus} // New prop
     />
   )
 }

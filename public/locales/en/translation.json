@@ -42,7 +42,14 @@
       "car_added_successfully": "Car added successfully!",
       "upload_failed_title": "Upload Failed",
       "image_upload_failed": "Failed to upload images. Please try again.",
-      "failed_to_add_car": "Failed to add car. Please try again."
+      "failed_to_add_car": "Failed to add car. Please try again.",
+      "custom_id_prefix": "Custom ID Prefix",
+      "placeholder_custom_id_prefix": "Select ID Prefix",
+      "placeholder_custom_id_number": "e.g, 12345",
+      "custom_id_number": "Custom ID Number",
+      "custom_id_required": "Custom ID prefix and 5-digit number are required.",
+      "status": "Status",
+      "placeholder_status": "Select status"
     },
     "change_password": {
       "title": "Change Admin Password",
@@ -73,7 +80,13 @@
       "delete": "Delete",
       "delete_success_title": "Car Deleted!",
       "delete_success_message": "Car has been successfully removed from inventory.",
-      "no_cars_found": "No cars found in your inventory."
+      "no_cars_found": "No cars found in your inventory.",
+      "days_since_posted": "Days since posted",
+      "days_since_posted_full": "Days since car posted: {{count}} days",
+      "status": "Status",
+      "status_update_success_title": "Status Updated!",
+      "status_update_error_title": "Status Update Failed",
+      "failed_to_update_status": "Failed to update car status. Please try again."
     },
     "most_visited_cars": {
       "title": "Most Visited Cars",
@@ -132,7 +145,8 @@
     "brand": "Brand",
     "model": "Model",
     "trim": "Trim",
-    "cylinders": "Cylinders"
+    "cylinders": "Cylinders",
+    "status": "Status"
   },
   "car_detail_page": {
     "loading_details": "Loading car details...",
@@ -238,5 +252,10 @@
     "sunday": "Sunday: Closed",
     "phone_number": "Phone Number:",
     "email": "Email:"
+  },
+  "status": {
+    "available": "Available",
+    "sold": "Sold",
+    "pending": "Pending"
   }
 }

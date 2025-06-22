@@ -38,7 +38,8 @@
     "brand": "Marca",
     "model": "Modelo",
     "trim": "Versión",
-    "cylinders": "Cilindros"
+    "cylinders": "Cilindros",
+    "status": "Estado"
   },
   "car_detail_page": {
     "loading_details": "Cargando detalles del coche...",
@@ -171,7 +172,14 @@
       "car_added_successfully": "¡Coche añadido exitosamente!",
       "upload_failed_title": "Subida Fallida",
       "image_upload_failed": "Error al subir imágenes. Por favor, inténtelo de nuevo.",
-      "failed_to_add_car": "Error al añadir coche. Por favor, inténtelo de nuevo."
+      "failed_to_add_car": "Error al añadir coche. Por favor, inténtelo de nuevo.",
+      "custom_id_prefix": "Prefijo de ID Personalizado",
+      "placeholder_custom_id_prefix": "Seleccionar prefijo de ID",
+      "placeholder_custom_id_number": "e.g, 12345",
+      "custom_id_number": "Número de ID Personalizado",
+      "custom_id_required": "El prefijo y el número de 5 dígitos del ID personalizado son obligatorios.",
+      "status": "Estado",
+      "placeholder_status": "Seleccionar estado"
     },
     "change_password": {
       "title": "Cambiar Contraseña de Administrador",
@@ -202,7 +210,13 @@
       "delete": "Eliminar",
       "delete_success_title": "¡Coche Eliminado!",
       "delete_success_message": "El coche ha sido eliminado exitosamente del inventario.",
-      "no_cars_found": "No se encontraron coches en su inventario."
+      "no_cars_found": "No se encontraron coches en su inventario.",
+      "days_since_posted": "Días desde la publicación",
+      "days_since_posted_full": "Días desde la publicación del coche: {{count}} días",
+      "status": "Estado",
+      "status_update_success_title": "¡Estado Actualizado!",
+      "status_update_error_title": "Error al Actualizar Estado",
+      "failed_to_update_status": "Error al actualizar el estado del coche. Por favor, inténtelo de nuevo."
     },
     "most_visited_cars": {
       "title": "Coches Más Visitados",
@@ -238,5 +252,10 @@
     "sunday": "Domingo: Cerrado",
     "phone_number": "Número de Teléfono:",
     "email": "Correo Electrónico:"
+  },
+  "status": {
+    "available": "Disponible",
+    "sold": "Vendido",
+    "pending": "Pendiente"
   }
 }

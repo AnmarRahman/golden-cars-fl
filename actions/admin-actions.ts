@@ -61,12 +61,16 @@ export async function handleAddCar(formData: FormData, lang: string) {
     const model = formData.get("model") as string
     const trim = formData.get("trim") as string
     const cylindersString = formData.get("cylinders") as string
+    const custom_id_prefix = formData.get("custom_id_prefix") as string // New
+    const custom_id_number = formData.get("custom_id_number") as string // New
+    const status = formData.get("status") as string // New
 
     // Retrieve image URLs directly from formData, as they were already uploaded by the client
     const imageUrls = formData.getAll("image_url") as string[]
 
     const price = priceString ? Number.parseFloat(priceString) : null
     const cylinders = cylindersString ? Number.parseInt(cylindersString) : null
+    const custom_id = custom_id_prefix && custom_id_number ? `${custom_id_prefix}#${custom_id_number}` : null // Construct custom_id
 
     const supabase = createServerClient()
     const { error } = await supabase.from("cars").insert({
@@ -83,6 +87,8 @@ export async function handleAddCar(formData: FormData, lang: string) {
         model: model || null,
         trim: trim || null,
         cylinders: cylinders,
+        custom_id, // New
+        status: status || "available", // New, default to 'available'
     })
 
     if (error) {
@@ -92,5 +98,21 @@ export async function handleAddCar(formData: FormData, lang: string) {
         revalidatePath(`/${lang}/admin/dashboard`)
         revalidatePath(`/${lang}/cars`)
         return { status: "success", message: "Car added successfully!" }
+    }
+}
+
+// New Server Action to update car status
+export async function handleUpdateCarStatus(carId: string, newStatus: string, lang: string) {
+    const supabase = createServerClient()
+    const { error } = await supabase.from("cars").update({ status: newStatus }).eq("id", carId)
+
+    if (error) {
+        console.error("Error updating car status:", error.message)
+        return { status: "error", message: `Failed to update status: ${error.message}` }
+    } else {
+        revalidatePath(`/${lang}/admin/dashboard`)
+        revalidatePath(`/${lang}/cars`) // Revalidate car listing pages
+        revalidatePath(`/${lang}/cars/${carId}`) // Revalidate specific car detail page
+        return { status: "success", message: "Car status updated successfully!" }
     }
 }

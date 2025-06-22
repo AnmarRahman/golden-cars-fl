@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next"
 import { incrementCarView } from "@/actions/car-views"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 
 interface Car {
   id: string
@@ -22,10 +23,12 @@ interface Car {
   price: number | null
   body_style: string | null
   drivetrain: string | null
-  brand: string | null // Added brand
-  model: string | null // Added model
-  trim: string | null // Added trim
-  cylinders: number | null // Added cylinders
+  brand: string | null
+  model: string | null
+  trim: string | null
+  cylinders: number | null
+  custom_id: string | null
+  status: string
 }
 
 export default function CarDetailPage() {
@@ -55,7 +58,7 @@ export default function CarDetailPage() {
         // Ensure all fields are selected
         const { data, error } = await supabase
           .from("cars")
-          .select("*, brand, model, trim, cylinders")
+          .select("*, brand, model, trim, cylinders, custom_id, status")
           .eq("id", carId)
           .single<Car>()
 
@@ -114,6 +117,20 @@ export default function CarDetailPage() {
     }
   }
 
+  // Function to determine badge styling based on status
+  const getStatusBadgeClasses = (status: string) => {
+    switch (status) {
+      case "available":
+        return "bg-yellow-400 text-black" // Yellow background, black text
+      case "sold":
+        return "bg-red-500 text-white" // Red background, white text
+      case "pending":
+        return "bg-amber-500 text-white" // Amber background, white text
+      default:
+        return "bg-gray-200 text-gray-800" // Default gray
+    }
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto py-12 px-4 md:px-6 lg:px-8 text-center bg-background text-foreground">
@@ -142,12 +159,16 @@ export default function CarDetailPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 bg-background text-foreground">
-      <div className="flex items-center justify-between mb-8">
+      <div className="relative flex items-center justify-between mb-8">
         <Button onClick={() => router.back()} variant="outline">
           {t("car_detail_page.back_to_search_results")}
         </Button>
         <h1 className="text-4xl font-bold text-center flex-grow">{car.name}</h1>
-        <div className="w-24"></div> {/* Spacer to balance the back button */}
+        {car.custom_id && (
+          <div className="absolute top-0 right-0 bg-gray-700 text-white px-3 py-1 rounded-md text-sm font-semibold">
+            {car.custom_id}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -185,9 +206,8 @@ export default function CarDetailPage() {
             {car.image_url.map((_, index) => (
               <span
                 key={index}
-                className={`h-2 w-2 rounded-full ${
-                  index === currentImageIndex ? "bg-primary" : "bg-gray-400"
-                } cursor-pointer`}
+                className={`h-2 w-2 rounded-full ${index === currentImageIndex ? "bg-primary" : "bg-gray-400"
+                  } cursor-pointer`}
                 onClick={() => setCurrentImageIndex(index)}
               />
             ))}
@@ -216,12 +236,12 @@ export default function CarDetailPage() {
                 <span className="font-semibold">{t("cars_page.model")}:</span> {car.model}
               </p>
             )}
-            {car.trim && ( // Added trim display
+            {car.trim && (
               <p>
                 <span className="font-semibold">{t("cars_page.trim")}:</span> {car.trim}
               </p>
             )}
-            {car.cylinders && ( // Added cylinders display
+            {car.cylinders && (
               <p>
                 <span className="font-semibold">{t("cars_page.cylinders")}:</span> {car.cylinders}
               </p>
@@ -241,7 +261,12 @@ export default function CarDetailPage() {
             <p>
               <span className="font-semibold">{t("cars_page.vin")}:</span> {car.vin}
             </p>
-            {/* Add more details here as needed */}
+            {car.status && (
+              <p className="flex items-center gap-2">
+                <span className="font-semibold">{t("cars_page.status")}:</span>{" "}
+                <Badge className={getStatusBadgeClasses(car.status)}>{t(`status.${car.status}`)}</Badge>
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-xl text-foreground">{t("car_detail_page.description")}:</h3>

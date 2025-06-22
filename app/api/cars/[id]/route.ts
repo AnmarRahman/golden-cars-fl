@@ -5,7 +5,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const carId = params.id
     const supabase = createServerClient()
 
-    const { data: car, error } = await supabase.from("cars").select("*").eq("id", carId).single()
+    const { data: car, error } = await supabase
+        .from("cars")
+        .select("*, custom_id, status") // Select new columns
+        .eq("id", carId)
+        .single()
 
     if (error) {
         console.error("Error fetching car details from API:", error)
