@@ -17,6 +17,16 @@ import { carData } from "@/lib/car-data"
 import { uploadImages } from "@/actions/upload-images"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog"
+import { X } from "lucide-react" // For removing images
 
 interface Car {
     id: string
@@ -58,7 +68,7 @@ interface MostVisitedCarStat {
 }
 
 // New interface for the newCarData state to include temporary fields
-interface NewCarFormData extends Partial<Car> {
+interface CarFormData extends Partial<Car> {
     custom_id_prefix?: string
     custom_id_number?: string
 }
@@ -78,7 +88,8 @@ interface AdminDashboardClientProps {
         carId: string,
         newStatus: string,
         lang: string,
-    ) => Promise<{ status: string; message: string }> // New prop
+    ) => Promise<{ status: string; message: string }>
+    handleUpdateCar: (carId: string, formData: FormData, lang: string) => Promise<{ status: string; message: string }> // New prop
 }
 
 export function AdminDashboardClient({
@@ -92,7 +103,8 @@ export function AdminDashboardClient({
     handleLogout,
     handleDeleteCar,
     handleAddCar,
-    handleUpdateCarStatus, // New prop
+    handleUpdateCarStatus,
+    handleUpdateCar, // New prop
 }: AdminDashboardClientProps) {
     const { t } = useTranslation("translation")
     const router = useRouter()
@@ -108,7 +120,7 @@ export function AdminDashboardClient({
     const [passwordError, setPasswordError] = useState("")
 
     const [showAddCarDialog, setShowAddCarDialog] = useState(false)
-    const [newCarData, setNewCarData] = useState<NewCarFormData>({ status: "available" }) // Use NewCarFormData
+    const [newCarData, setNewCarData] = useState<CarFormData>({ status: "available" })
     const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([])
     const [addCarError, setAddCarError] = useState("")
 
@@ -128,7 +140,20 @@ export function AdminDashboardClient({
     const [isAddingCar, setIsAddingCar] = useState(false)
     const [isChangingPassword, setIsChangingPassword] = useState(false)
     const [isDeletingCar, setIsDeletingCar] = useState(false)
-    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false) // New state for status update loading
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+    const [isUpdatingCar, setIsUpdatingCar] = useState(false) // New state for update car loading
+
+    // New states for Edit Car Modal
+    const [showEditCarDialog, setShowEditCarDialog] = useState(false)
+    const [editingCar, setEditingCar] = useState<Car | null>(null)
+    const [editCarData, setEditCarData] = useState<CarFormData>({})
+    const [editSelectedImageFiles, setEditSelectedImageFiles] = useState<File[]>([])
+    const [editExistingImageUrls, setEditExistingImageUrls] = useState<string[]>([])
+    const editCarFormRef = useRef<HTMLFormElement>(null)
+
+    // New states for controlling dropdown visibility in Edit Car modal
+    const [showEditBrandDropdown, setShowEditBrandDropdown] = useState(false)
+    const [showEditModelDropdown, setShowEditModelDropdown] = useState(false)
 
     const filteredAddCarBrands = newCarData.brand
         ? carData.filter((car) => car.brand.toLowerCase().startsWith(newCarData.brand!.toLowerCase()))
@@ -140,6 +165,18 @@ export function AdminDashboardClient({
     const filteredAddCarModels = newCarData.model
         ? availableAddCarModels.filter((model) => model.toLowerCase().startsWith(newCarData.model!.toLowerCase()))
         : availableAddCarModels
+
+    // For Edit Car Form
+    const filteredEditCarBrands = editCarData.brand
+        ? carData.filter((car) => car.brand.toLowerCase().startsWith(editCarData.brand!.toLowerCase()))
+        : carData
+
+    const selectedEditCarBrandData = carData.find((car) => car.brand.toLowerCase() === editCarData.brand?.toLowerCase())
+    const availableEditCarModels = selectedEditCarBrandData ? selectedEditCarBrandData.models : []
+
+    const filteredEditCarModels = editCarData.model
+        ? availableEditCarModels.filter((model) => model.toLowerCase().startsWith(editCarData.model!.toLowerCase()))
+        : availableEditCarModels
 
     useEffect(() => {
         setCars(initialCars)
@@ -206,7 +243,7 @@ export function AdminDashboardClient({
         })
     }
 
-    const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>, isEditForm = false) => {
         const files = event.target.files
         if (files) {
             setUploadMessage(t("admin_dashboard.add_new_car.processing_images_client"))
@@ -216,15 +253,27 @@ export function AdminDashboardClient({
                 const processedFile = await processImage(file)
                 processedFiles.push(processedFile)
             }
-            setSelectedImageFiles((prevFiles) => [...prevFiles, ...processedFiles])
+            if (isEditForm) {
+                setEditSelectedImageFiles((prevFiles) => [...prevFiles, ...processedFiles])
+            } else {
+                setSelectedImageFiles((prevFiles) => [...prevFiles, ...processedFiles])
+            }
             event.target.value = "" // Clear input to allow re-selection of same files
             setUploadProgress(0) // Reset progress after client-side processing
             setUploadMessage("")
         }
     }
 
-    const handleClearImages = () => {
-        setSelectedImageFiles([])
+    const handleClearImages = (isEditForm = false) => {
+        if (isEditForm) {
+            setEditSelectedImageFiles([])
+        } else {
+            setSelectedImageFiles([])
+        }
+    }
+
+    const handleRemoveExistingImage = (urlToRemove: string) => {
+        setEditExistingImageUrls((prevUrls) => prevUrls.filter((url) => url !== urlToRemove))
     }
 
     const handleSubmitAddCar = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -329,6 +378,120 @@ export function AdminDashboardClient({
         })
     }
 
+    const handleSubmitEditCar = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+
+        if (!editingCar?.id) {
+            toast({
+                title: t("admin_dashboard.edit_car.error_title"),
+                description: t("admin_dashboard.edit_car.no_car_selected"),
+                variant: "destructive",
+            })
+            return
+        }
+
+        if (!editCarData.brand || !editCarData.model) {
+            toast({
+                title: t("admin_dashboard.edit_car.validation_error"),
+                description: t("admin_dashboard.edit_car.brand_model_required"),
+                variant: "destructive",
+            })
+            return
+        }
+
+        if (!editCarData.custom_id_prefix || !editCarData.custom_id_number || editCarData.custom_id_number.length !== 5) {
+            toast({
+                title: t("admin_dashboard.edit_car.validation_error"),
+                description: t("admin_dashboard.edit_car.custom_id_required"),
+                variant: "destructive",
+            })
+            return
+        }
+
+        setUploadProgress(0)
+        setUploadMessage("")
+        // setEditCarError("") // No specific error state for edit form, use toast
+
+        const initialFormData = new FormData(event.currentTarget)
+
+        let uploadedNewImageUrls: string[] = []
+        if (editSelectedImageFiles.length > 0) {
+            const imageFormData = new FormData()
+            editSelectedImageFiles.forEach((file) => imageFormData.append("images", file))
+            try {
+                setUploadMessage(t("admin_dashboard.edit_car.uploading_images"))
+                setUploadProgress(25)
+                uploadedNewImageUrls = await uploadImages(imageFormData)
+                setUploadProgress(75)
+            } catch (error) {
+                console.error("Error uploading images:", error)
+                toast({
+                    title: t("admin_dashboard.edit_car.upload_failed_title"),
+                    description: t("admin_dashboard.edit_car.image_upload_failed"),
+                    variant: "destructive",
+                })
+                setUploadProgress(0)
+                setUploadMessage("")
+                return
+            }
+        }
+
+        // Combine existing (and not removed) image URLs with newly uploaded ones
+        const finalImageUrls = [...editExistingImageUrls, ...uploadedNewImageUrls]
+
+        const carFormData = new FormData()
+        for (const [key, value] of initialFormData.entries()) {
+            if (key !== "images") {
+                // Exclude the file input itself
+                carFormData.append(key, value)
+            }
+        }
+
+        carFormData.set("brand", editCarData.brand!)
+        carFormData.set("model", editCarData.model!)
+        carFormData.set("name", `${editCarData.brand!} ${editCarData.model!}`)
+        carFormData.set("custom_id_prefix", editCarData.custom_id_prefix!)
+        carFormData.set("custom_id_number", editCarData.custom_id_number!)
+        carFormData.set("status", editCarData.status || "available")
+
+        // Append all final image URLs
+        finalImageUrls.forEach((url) => carFormData.append("image_url", url))
+
+        setIsUpdatingCar(true)
+        startTransition(async () => {
+            try {
+                setUploadMessage(t("admin_dashboard.edit_car.processing_car_data"))
+                const result = await handleUpdateCar(editingCar.id, carFormData, lang)
+                setUploadProgress(100)
+
+                if (result?.status === "success") {
+                    toast({
+                        title: t("admin_dashboard.edit_car.success_title"),
+                        description: result.message,
+                        variant: "default",
+                    })
+                    setShowEditCarDialog(false) // Close modal on success
+                } else {
+                    toast({
+                        title: t("admin_dashboard.edit_car.error_title"),
+                        description: result?.message || t("admin_dashboard.edit_car.failed_to_update_car"),
+                        variant: "destructive",
+                    })
+                }
+            } finally {
+                setIsUpdatingCar(false)
+                setEditCarData({})
+                setEditSelectedImageFiles([])
+                setEditExistingImageUrls([])
+                setTimeout(() => {
+                    setUploadProgress(0)
+                    setUploadMessage("")
+                }, 3000)
+                router.refresh()
+            }
+        })
+    }
+
     const handleDeleteCarAction = async (carId: string) => {
         setIsDeletingCar(true)
         startTransition(async () => {
@@ -414,6 +577,23 @@ export function AdminDashboardClient({
         return diffDays
     }
 
+    const handleEditButtonClick = (car: Car) => {
+        setEditingCar(car)
+        // Split custom_id for prefix and number
+        const [prefix, number] = car.custom_id?.split("#") || ["", ""]
+        setEditCarData({
+            ...car,
+            custom_id_prefix: prefix,
+            custom_id_number: number,
+        })
+        setEditExistingImageUrls(car.image_url || [])
+        setEditSelectedImageFiles([]) // Clear any previously selected new files
+        setShowEditCarDialog(true)
+        // Ensure dropdowns are hidden when modal opens
+        setShowEditBrandDropdown(false)
+        setShowEditModelDropdown(false)
+    }
+
     return (
         <div className="container mx-auto py-12 px-4 md:px-6 lg:px-8 bg-background text-foreground">
             <div className="flex justify-between items-center mb-8">
@@ -443,15 +623,18 @@ export function AdminDashboardClient({
                                     placeholder={t("admin_dashboard.add_new_car.placeholder_brand")}
                                     value={newCarData.brand || ""}
                                     onChange={(e) => {
-                                        setNewCarData({ ...newCarData, brand: e.target.value })
-                                        setConstructedCarName("")
-                                        setShowBrandDropdown(true)
+                                        setNewCarData({ ...newCarData, brand: e.target.value });
+                                        setConstructedCarName("");
+                                        setShowBrandDropdown(true);
                                     }}
                                     onFocus={() => setShowBrandDropdown(true)}
-                                    onBlur={() => setTimeout(() => setShowBrandDropdown(false), 100)}
+                                    onBlur={() => {
+                                        setTimeout(() => setShowBrandDropdown(false), 300);
+                                    }}
                                     autoComplete="off"
                                     ref={addCarBrandInputRef}
                                 />
+
                                 {showBrandDropdown && filteredAddCarBrands.length > 0 && (
                                     <ul className="absolute z-10 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
                                         {filteredAddCarBrands.map((car) => (
@@ -483,16 +666,19 @@ export function AdminDashboardClient({
                                         placeholder={t("admin_dashboard.add_new_car.placeholder_model")}
                                         value={newCarData.model || ""}
                                         onChange={(e) => {
-                                            setNewCarData({ ...newCarData, model: e.target.value })
-                                            setConstructedCarName("")
-                                            setShowModelDropdown(true)
+                                            setNewCarData({ ...newCarData, model: e.target.value });
+                                            setConstructedCarName("");
+                                            setShowModelDropdown(true);
                                         }}
                                         onFocus={() => setShowModelDropdown(true)}
-                                        onBlur={() => setTimeout(() => setShowModelDropdown(false), 100)}
+                                        onBlur={() => {
+                                            setTimeout(() => setShowModelDropdown(false), 300);
+                                        }}
                                         disabled={!newCarData.brand}
                                         autoComplete="off"
                                         ref={addCarModelInputRef}
                                     />
+
                                     {showModelDropdown && filteredAddCarModels.length > 0 && (
                                         <ul className="absolute z-10 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
                                             {filteredAddCarModels.map((model) => (
@@ -514,8 +700,8 @@ export function AdminDashboardClient({
                                 </div>
                             )}
 
-                            {/* New:  and Number */}
-                            <div className="grid grid-cols-2 gap-2">
+                            {/* Custom ID Prefix and Number */}
+                            <div className="grid grid-cols-2 gap-2 items-baseline">
                                 <div className="space-y-2">
                                     <Label htmlFor="custom_id_prefix">{t("admin_dashboard.add_new_car.custom_id_prefix")}</Label>
                                     <Select
@@ -523,7 +709,9 @@ export function AdminDashboardClient({
                                         value={newCarData.custom_id_prefix || ""}
                                         onValueChange={(value) => setNewCarData({ ...newCarData, custom_id_prefix: value })}
                                     >
-                                        <SelectTrigger id="custom_id_prefix">
+                                        <SelectTrigger id="custom_id_prefix" className="h-10">
+                                            {" "}
+                                            {/* Added h-10 */}
                                             <SelectValue placeholder={t("admin_dashboard.add_new_car.placeholder_custom_id_prefix")} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -559,8 +747,7 @@ export function AdminDashboardClient({
                                     type="file"
                                     multiple
                                     accept="image/*"
-                                    onChange={handleImageChange}
-                                // Removed placeholder prop as it's not typically visible for file inputs
+                                    onChange={(e) => handleImageChange(e, false)}
                                 />
                                 {selectedImageFiles.length > 0 && (
                                     <div className="mt-2 text-sm text-muted-foreground">
@@ -572,7 +759,7 @@ export function AdminDashboardClient({
                                                 </li>
                                             ))}
                                         </ul>
-                                        <Button variant="outline" size="sm" onClick={handleClearImages} className="mt-2">
+                                        <Button variant="outline" size="sm" onClick={() => handleClearImages(false)} className="mt-2">
                                             Clear All Images
                                         </Button>
                                     </div>
@@ -653,6 +840,7 @@ export function AdminDashboardClient({
                                     </SelectContent>
                                 </Select>
                             </div>
+
                             <div className="space-y-2">
                                 <Label htmlFor="drivetrain">{t("admin_dashboard.add_new_car.drivetrain")}</Label>
                                 <Select name="drivetrain" defaultValue="null">
@@ -669,7 +857,7 @@ export function AdminDashboardClient({
                                     </SelectContent>
                                 </Select>
                             </div>
-                            {/* New: Car Status */}
+                            {/* Car Status */}
                             <div className="space-y-2">
                                 <Label htmlFor="status">{t("admin_dashboard.add_new_car.status")}</Label>
                                 <Select
@@ -756,7 +944,7 @@ export function AdminDashboardClient({
                                             fill
                                             className="object-cover object-center"
                                         />
-                                        {/* New: Custom ID display on image */}
+                                        {/* Custom ID display on image */}
                                         {car.custom_id && (
                                             <div className="absolute top-2 right-2 bg-gray-700/80 text-white px-2 py-1 rounded-md text-xs font-semibold">
                                                 {car.custom_id}
@@ -806,13 +994,13 @@ export function AdminDashboardClient({
                                                 {t(`search_form.${car.drivetrain.toLowerCase()}`)}
                                             </p>
                                         )}
-                                        {/* Corrected: Days Since Posted */}
+                                        {/* Days Since Posted */}
                                         <p className="text-sm text-muted-foreground">
                                             {t("admin_dashboard.manage_cars.days_since_posted_full", {
                                                 count: getDaysSincePosted(car.created_at),
                                             })}
                                         </p>
-                                        {/* Corrected: Status Selector */}
+                                        {/* Status Selector */}
                                         <div className="space-y-1">
                                             <Label htmlFor={`status-${car.id}`} className="text-sm font-semibold">
                                                 {t("admin_dashboard.manage_cars.status")}:
@@ -835,8 +1023,11 @@ export function AdminDashboardClient({
                                             </Select>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="p-4 pt-0">
-                                        <form action={() => handleDeleteCarAction(car.id)} className="w-full">
+                                    <CardFooter className="p-4 pt-0 flex gap-2">
+                                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEditButtonClick(car)}>
+                                            {t("admin_dashboard.manage_cars.edit")}
+                                        </Button>
+                                        <form action={() => handleDeleteCarAction(car.id)} className="flex-1">
                                             <Button variant="destructive" size="sm" className="w-full" disabled={isDeletingCar}>
                                                 {isDeletingCar
                                                     ? t("admin_dashboard.manage_cars.deleting")
@@ -934,6 +1125,368 @@ export function AdminDashboardClient({
                     )}
                 </CardContent>
             </Card>
+
+            {/* Edit Car Dialog */}
+            {editingCar && (
+                <Dialog open={showEditCarDialog} onOpenChange={setShowEditCarDialog}>
+                    <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>{t("admin_dashboard.edit_car.title")}</DialogTitle>
+                            <DialogDescription>{t("admin_dashboard.edit_car.description")}</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleSubmitEditCar} className="space-y-4" ref={editCarFormRef}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="space-y-2 relative">
+                                    <Label htmlFor="edit_brand">{t("admin_dashboard.edit_car.brand")}</Label>
+                                    <Input
+                                        id="edit_brand"
+                                        name="brand"
+                                        type="text"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_brand")}
+                                        value={editCarData.brand || ""}
+                                        onChange={(e) => {
+                                            setEditCarData({ ...editCarData, brand: e.target.value });
+                                        }}
+                                        onFocus={() => setShowEditBrandDropdown(true)}
+                                        onBlur={() => {
+                                            setTimeout(() => setShowEditBrandDropdown(false), 300);
+                                        }}
+                                        autoComplete="off"
+                                    />
+
+                                    {/* Brand dropdown for edit form */}
+                                    {showEditBrandDropdown && filteredEditCarBrands.length > 0 && (
+                                        <ul className="absolute z-10 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+                                            {filteredEditCarBrands.map((car) => (
+                                                <li
+                                                    key={car.brand}
+                                                    className="px-4 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault()
+                                                        setEditCarData({ ...editCarData, brand: car.brand })
+                                                        setShowEditBrandDropdown(false) // Close dropdown on selection
+                                                    }}
+                                                >
+                                                    {car.brand}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+
+                                {editCarData.brand && (
+                                    <div className="space-y-2 relative">
+                                        <Label htmlFor="edit_model">{t("admin_dashboard.edit_car.model")}</Label>
+                                        <Input
+                                            id="edit_model"
+                                            name="model"
+                                            type="text"
+                                            placeholder={t("admin_dashboard.edit_car.placeholder_model")}
+                                            value={editCarData.model || ""}
+                                            onChange={(e) => {
+                                                setEditCarData({ ...editCarData, model: e.target.value });
+                                            }}
+                                            disabled={!editCarData.brand}
+                                            onFocus={() => setShowEditModelDropdown(true)}
+                                            onBlur={() => {
+                                                setTimeout(() => setShowEditModelDropdown(false), 300);
+                                            }}
+                                            autoComplete="off"
+                                        />
+
+                                        {/* Model dropdown for edit form */}
+                                        {showEditModelDropdown && filteredEditCarModels.length > 0 && (
+                                            <ul className="absolute z-10 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+                                                {filteredEditCarModels.map((model) => (
+                                                    <li
+                                                        key={model}
+                                                        className="px-4 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault()
+                                                            setEditCarData({ ...editCarData, model: model })
+                                                            setShowEditModelDropdown(false) // Close dropdown on selection
+                                                        }}
+                                                    >
+                                                        {model}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Custom ID Prefix and Number for Edit - MOVED HERE */}
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_custom_id_prefix">{t("admin_dashboard.edit_car.custom_id_prefix")}</Label>
+                                    <Select
+                                        name="custom_id_prefix"
+                                        value={editCarData.custom_id_prefix || ""}
+                                        onValueChange={(value) => setEditCarData({ ...editCarData, custom_id_prefix: value })}
+                                    >
+                                        <SelectTrigger id="edit_custom_id_prefix" className="h-10">
+                                            {" "}
+                                            {/* Added h-10 */}
+                                            <SelectValue placeholder={t("admin_dashboard.edit_car.placeholder_custom_id_prefix")} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="A">A</SelectItem>
+                                            <SelectItem value="B">B</SelectItem>
+                                            <SelectItem value="C">C</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_custom_id_number">{t("admin_dashboard.edit_car.custom_id_number")}</Label>
+                                    <Input
+                                        id="edit_custom_id_number"
+                                        name="custom_id_number"
+                                        type="text"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_custom_id_number")}
+                                        maxLength={5}
+                                        value={editCarData.custom_id_number || ""}
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/[^0-9]/g, "")
+                                            setEditCarData({ ...editCarData, custom_id_number: value })
+                                        }}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2 col-span-full">
+                                    <Label htmlFor="edit_images">{t("admin_dashboard.edit_car.image_files")}</Label>
+                                    <Input
+                                        id="edit_images"
+                                        name="images"
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={(e) => handleImageChange(e, true)}
+                                    />
+                                    {(editExistingImageUrls.length > 0 || editSelectedImageFiles.length > 0) && (
+                                        <div className="mt-2 text-sm text-muted-foreground">
+                                            <p className="font-semibold">{t("admin_dashboard.edit_car.current_images")}:</p>
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {editExistingImageUrls.map((url, index) => (
+                                                    <div
+                                                        key={`existing-${index}`}
+                                                        className="relative w-24 h-24 border rounded-md overflow-hidden"
+                                                    >
+                                                        <Image
+                                                            src={url || "/placeholder.svg"}
+                                                            alt={`Existing car image ${index + 1}`}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="absolute top-0 right-0 h-6 w-6 rounded-full"
+                                                            onClick={() => handleRemoveExistingImage(url)}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                            <span className="sr-only">{t("admin_dashboard.edit_car.remove_image")}</span>
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                                {editSelectedImageFiles.map((file, index) => (
+                                                    <div key={`new-${index}`} className="relative w-24 h-24 border rounded-md overflow-hidden">
+                                                        <Image
+                                                            src={URL.createObjectURL(file) || "/placeholder.svg"}
+                                                            alt={`New car image ${index + 1}`}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="absolute top-0 right-0 h-6 w-6 rounded-full"
+                                                            onClick={() => setEditSelectedImageFiles((prev) => prev.filter((_, i) => i !== index))}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                            <span className="sr-only">{t("admin_dashboard.edit_car.remove_new_image")}</span>
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <Button variant="outline" size="sm" onClick={() => handleClearImages(true)} className="mt-2">
+                                                {t("admin_dashboard.edit_car.clear_all_images")}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_mileage">{t("admin_dashboard.edit_car.mileage")}</Label>
+                                    <Input
+                                        id="edit_mileage"
+                                        name="mileage"
+                                        type="number"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_mileage")}
+                                        value={editCarData.mileage || ""}
+                                        onChange={(e) => setEditCarData({ ...editCarData, mileage: Number(e.target.value) })}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_vin">{t("admin_dashboard.edit_car.vin")}</Label>
+                                    <Input
+                                        id="edit_vin"
+                                        name="vin"
+                                        type="text"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_vin")}
+                                        maxLength={17}
+                                        value={editCarData.vin || ""}
+                                        onChange={(e) => setEditCarData({ ...editCarData, vin: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_model_year">{t("admin_dashboard.edit_car.model_year")}</Label>
+                                    <Input
+                                        id="edit_model_year"
+                                        name="model_year"
+                                        type="number"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_model_year")}
+                                        value={editCarData.model_year || ""}
+                                        onChange={(e) => setEditCarData({ ...editCarData, model_year: Number(e.target.value) })}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_price">{t("admin_dashboard.edit_car.price")}</Label>
+                                    <Input
+                                        id="edit_price"
+                                        name="price"
+                                        type="number"
+                                        step="0.01"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_price")}
+                                        value={editCarData.price || ""}
+                                        onChange={(e) => setEditCarData({ ...editCarData, price: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_trim">{t("admin_dashboard.edit_car.trim")}</Label>
+                                    <Input
+                                        id="edit_trim"
+                                        name="trim"
+                                        type="text"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_trim")}
+                                        value={editCarData.trim || ""}
+                                        onChange={(e) => setEditCarData({ ...editCarData, trim: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_cylinders">{t("admin_dashboard.edit_car.cylinders")}</Label>
+                                    <Input
+                                        id="edit_cylinders"
+                                        name="cylinders"
+                                        type="number"
+                                        placeholder={t("admin_dashboard.edit_car.placeholder_cylinders")}
+                                        value={editCarData.cylinders || ""}
+                                        onChange={(e) => setEditCarData({ ...editCarData, cylinders: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_body_style">{t("admin_dashboard.edit_car.body_style")}</Label>
+                                    <Select
+                                        name="body_style"
+                                        value={editCarData.body_style || "null"}
+                                        onValueChange={(value) =>
+                                            setEditCarData({ ...editCarData, body_style: value === "null" ? null : value })
+                                        }
+                                    >
+                                        <SelectTrigger id="edit_body_style">
+                                            <SelectValue placeholder={t("admin_dashboard.edit_car.placeholder_body_style")} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="null">{t("search_form.any_body_style")}</SelectItem>
+                                            {bodyStyles.map((style) => (
+                                                <SelectItem key={style} value={style}>
+                                                    {t(`search_form.${style.toLowerCase()}`)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_drivetrain">{t("admin_dashboard.edit_car.drivetrain")}</Label>
+                                    <Select
+                                        name="drivetrain"
+                                        value={editCarData.drivetrain || "null"}
+                                        onValueChange={(value) =>
+                                            setEditCarData({ ...editCarData, drivetrain: value === "null" ? null : value })
+                                        }
+                                    >
+                                        <SelectTrigger id="edit_drivetrain">
+                                            <SelectValue placeholder={t("admin_dashboard.edit_car.placeholder_drivetrain")} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="null">{t("search_form.any_drivetrain")}</SelectItem>
+                                            {drivetrains.map((dt) => (
+                                                <SelectItem key={dt} value={dt}>
+                                                    {t(`search_form.${dt.toLowerCase()}`)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {/* Car Status for Edit */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_status">{t("admin_dashboard.edit_car.status")}</Label>
+                                    <Select
+                                        name="status"
+                                        value={editCarData.status || "available"}
+                                        onValueChange={(value) => setEditCarData({ ...editCarData, status: value })}
+                                    >
+                                        <SelectTrigger id="edit_status">
+                                            <SelectValue placeholder={t("admin_dashboard.edit_car.placeholder_status")} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {carStatuses.map((statusOption) => (
+                                                <SelectItem key={statusOption} value={statusOption}>
+                                                    {t(`status.${statusOption}`)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit_description">{t("admin_dashboard.edit_car.description")}</Label>
+                                <Textarea
+                                    id="edit_description"
+                                    name="description"
+                                    placeholder={t("admin_dashboard.edit_car.placeholder_description")}
+                                    rows={4}
+                                    value={editCarData.description || ""}
+                                    onChange={(e) => setEditCarData({ ...editCarData, description: e.target.value })}
+                                />
+                            </div>
+                            {(isUpdatingCar || uploadProgress > 0) && (
+                                <div className="space-y-2">
+                                    <Progress value={uploadProgress} className="w-full" />
+                                    {uploadMessage && <p className="text-sm text-center text-muted-foreground">{uploadMessage}</p>}
+                                </div>
+                            )}
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="outline">
+                                        {t("common.cancel")}
+                                    </Button>
+                                </DialogClose>
+                                <Button type="submit" disabled={isUpdatingCar}>
+                                    {isUpdatingCar
+                                        ? t("admin_dashboard.edit_car.updating_car")
+                                        : t("admin_dashboard.edit_car.update_car")}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     )
 }

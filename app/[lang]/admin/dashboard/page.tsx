@@ -10,6 +10,7 @@ import {
   handleDeleteCar,
   handleAddCar,
   handleUpdateCarStatus,
+  handleUpdateCar, // New import
 } from "@/actions/admin-actions" // Updated import
 
 interface Car {
@@ -111,7 +112,8 @@ export default async function AdminDashboardPage({
       handleLogout={handleLogout}
       handleDeleteCar={handleDeleteCar}
       handleAddCar={handleAddCar}
-      handleUpdateCarStatus={handleUpdateCarStatus} // New prop
+      handleUpdateCarStatus={handleUpdateCarStatus}
+      handleUpdateCar={handleUpdateCar} // New prop
     />
   )
 }
