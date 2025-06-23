@@ -12,7 +12,7 @@ interface InquiryState {
     message: string
 }
 
-export async function submitInquiry(prevState: InquiryState | null, formData: FormData): Promise<InquiryState> {
+export async function submitInquiry(formData: FormData): Promise<InquiryState> {
     const lang = formData.get("lang") as string
     const name = formData.get("name") as string
     const email = formData.get("email") as string
@@ -50,8 +50,8 @@ export async function submitInquiry(prevState: InquiryState | null, formData: Fo
                 car_drivetrain,
                 car_trim,
                 car_cylinders,
-                car_custom_id, // New
-                car_status, // New
+                car_custom_id,
+                car_status,
             },
         ])
 
@@ -60,35 +60,33 @@ export async function submitInquiry(prevState: InquiryState | null, formData: Fo
             return { status: "error", message: "Failed to submit inquiry. Please try again." }
         }
 
-        // Send email notification
         try {
             await resend.emails.send({
-                from: "onboarding@resend.dev",
-                to: "delivered@resend.dev", // Replace with your actual recipient email
+                from: "Golden Cars FL <noreply@goldencarsfl.com>",
+                to: "goldencarsfl@gmail.com",
                 subject: `New Car Inquiry for ${car_name_at_inquiry}`,
                 html: `
-          <p>You have a new inquiry for the car: <strong>${car_name_at_inquiry}</strong> (ID: ${car_custom_id || "N/A"})</p>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Phone:</strong> ${phone_number || "N/A"}</p>
-          <p><strong>Message:</strong> ${message}</p>
-          <p><strong>Car Details:</strong></p>
-          <ul>
-            <li>Model Year: ${car_model_year}</li>
-            <li>VIN: ${car_vin}</li>
-            <li>Price: ${car_price ? `$${car_price.toLocaleString()}` : "N/A"}</li>
-            <li>Body Style: ${car_body_style || "N/A"}</li>
-            <li>Drivetrain: ${car_drivetrain || "N/A"}</li>
-            <li>Trim: ${car_trim || "N/A"}</li>
-            <li>Cylinders: ${car_cylinders || "N/A"}</li>
-            <li>Status: ${car_status || "N/A"}</li>
-          </ul>
-          <p>View car details: <a href="${BASE_URL}/${lang}/cars/${car_id}">${BASE_URL}/${lang}/cars/${car_id}</a></p>
-        `,
+                  <p>You have a new inquiry for the car: <strong>${car_name_at_inquiry}</strong> (ID: ${car_custom_id || "N/A"})</p>
+                  <p><strong>Name:</strong> ${name}</p>
+                  <p><strong>Email:</strong> ${email}</p>
+                  <p><strong>Phone:</strong> ${phone_number || "N/A"}</p>
+                  <p><strong>Message:</strong> ${message}</p>
+                  <p><strong>Car Details:</strong></p>
+                  <ul>
+                    <li>Model Year: ${car_model_year}</li>
+                    <li>VIN: ${car_vin}</li>
+                    <li>Price: ${car_price ? `$${car_price.toLocaleString()}` : "N/A"}</li>
+                    <li>Body Style: ${car_body_style || "N/A"}</li>
+                    <li>Drivetrain: ${car_drivetrain || "N/A"}</li>
+                    <li>Trim: ${car_trim || "N/A"}</li>
+                    <li>Cylinders: ${car_cylinders || "N/A"}</li>
+                    <li>Status: ${car_status || "N/A"}</li>
+                  </ul>
+                  <p>View car details: <a href="${BASE_URL}/${lang}/cars/${car_id}">${BASE_URL}/${lang}/cars/${car_id}</a></p>
+                `,
             })
         } catch (emailError) {
             console.error("Error sending email:", emailError)
-            // Do not return error here, as inquiry was successfully saved to DB
         }
 
         revalidatePath(`/${lang}/cars/${car_id}`)

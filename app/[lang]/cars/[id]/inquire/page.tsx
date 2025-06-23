@@ -1,13 +1,15 @@
-"use client" // This component needs to be a Client Component to use useEffect and useRef
+"use client"
+
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { useTranslation } from "react-i18next" // Use useTranslation for client component
+import { useTranslation } from "react-i18next"
 import { incrementCarView } from "@/actions/car-views"
-import { useEffect, useRef, useState } from "react" // Import useEffect, useRef, useState
-import { submitInquiry } from "@/actions/inquiry-actions" // Import the new server action
+import { useEffect, useRef, useState } from "react"
+import { submitInquiry } from "@/actions/inquiry-actions"
 
 interface Car {
   id: string
@@ -19,18 +21,15 @@ interface Car {
   model_year: number
   views: number
   price: number | null
-  body_style: string | null // Added body_style
-  drivetrain: string | null // Added drivetrain
-  trim: string | null // Added trim
-  cylinders: number | null // Added cylinders
+  body_style: string | null
+  drivetrain: string | null
+  trim: string | null
+  cylinders: number | null
 }
 
-// This function needs to be a server function if it's called directly in a Server Component.
-// However, since InquirePage is now a client component, we'll fetch car details client-side or pass them as props.
-// For simplicity and to keep the structure, we'll make this a client-side fetch or assume data is passed.
-// For this example, I'll adapt it to be called client-side.
+// Client-side fetch for car details
 async function getCarDetailsClient(carId: string): Promise<Car | null> {
-  const response = await fetch(`/api/cars/${carId}`) // Assuming you have an API route for car details
+  const response = await fetch(`/api/cars/${carId}`)
   if (!response.ok) {
     console.error("Error fetching car details:", response.statusText)
     return null
@@ -43,38 +42,38 @@ export default function InquirePage({
   params,
   searchParams,
 }: {
-  params: { id: string; lang: string }
+  params: Promise<{ id: string; lang: string }>
   searchParams: { status?: string; source?: string }
 }) {
-  const { id, lang } = params
-  const { t } = useTranslation() // Use useTranslation for client component
+  // Unwrap the params promise using React.use()
+  const { id, lang } = React.use(params)
+
+  const { t } = useTranslation()
   const [car, setCar] = useState<Car | null>(null)
   const [loadingCar, setLoadingCar] = useState(true)
 
-  const hasViewIncremented = useRef(false) // Ref to prevent double increment in Strict Mode
-  const source = searchParams.source // Get the source from query parameters
+  const hasViewIncremented = useRef(false)
+  const source = searchParams.source
 
   useEffect(() => {
     const fetchCar = async () => {
       setLoadingCar(true)
-      const carData = await getCarDetailsClient(id) // Fetch car details client-side
+      const carData = await getCarDetailsClient(id)
       setCar(carData)
       setLoadingCar(false)
     }
 
     fetchCar()
 
-    // Increment view only if source is 'search' and not already incremented
     if (source === "search" && !hasViewIncremented.current) {
       incrementCarView(id, lang)
       hasViewIncremented.current = true
     }
 
-    // Cleanup function for Strict Mode in development
     return () => {
       hasViewIncremented.current = false
     }
-  }, [id, lang, source]) // Dependencies for useEffect
+  }, [id, lang, source])
 
   if (loadingCar) {
     return (
@@ -149,7 +148,6 @@ export default function InquirePage({
                 placeholder={t("inquire_page.placeholder_phone_number")}
               />
             </div>
-            {/* New Message Field */}
             <div className="space-y-2">
               <Label htmlFor="message">{t("inquire_page.message")}</Label>
               <Textarea

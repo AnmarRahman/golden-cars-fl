@@ -37,7 +37,7 @@ export default async function ContactPage({
         <p><strong>Message:</strong></p>
         <p>${message}</p>
       `,
-      fromDisplayName: "Golden Cars FL", // Friendly name for the sender
+      // fromDisplayName: "Golden Cars FL", // Friendly name for the sender
       replyTo: email, // Replies go to the sender's email
     })
 

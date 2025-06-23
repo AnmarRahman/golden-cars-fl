@@ -3,17 +3,14 @@
 import { Resend } from "resend"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-// Use Resend's default sender for now, as you don't have a custom domain verified with Resend.
-// For production, it's highly recommended to verify your own domain with Resend
-// and use an email address from that domain (e.g., "noreply@yourdomain.com").
-const RESEND_DEFAULT_SENDER = "onboarding@resend.dev"
+
+// Hardcoded full sender (friendly name + email)
+const RESEND_DEFAULT_SENDER = "Golden Cars FL <noreply@goldencarsfl.com>"
 
 interface SendEmailOptions {
     to: string | string[]
     subject: string
     html: string
-    // The 'from' field will now include a friendly name and the Resend default sender.
-    fromDisplayName?: string
     replyTo?: string
 }
 
@@ -21,7 +18,6 @@ export async function sendEmail({
     to,
     subject,
     html,
-    fromDisplayName = "Golden Cars FL", // Default friendly name
     replyTo,
 }: SendEmailOptions) {
     if (!process.env.RESEND_API_KEY) {
@@ -29,8 +25,8 @@ export async function sendEmail({
         return { success: false, message: "Email service not configured." }
     }
 
-    // Construct the 'from' string with a friendly name and the Resend default sender
-    const fromAddress = `${fromDisplayName} <${RESEND_DEFAULT_SENDER}>`
+    // Use the full sender address directly
+    const fromAddress = RESEND_DEFAULT_SENDER
 
     try {
         const { data, error } = await resend.emails.send({
