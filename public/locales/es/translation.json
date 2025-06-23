@@ -107,7 +107,10 @@
     "placeholder_phone_number": "(123) 456-7890",
     "message": "Mensaje",
     "placeholder_message": "Su mensaje aquí...",
-    "submit_inquiry": "Enviar Consulta"
+    "submit_inquiry": "Enviar Consulta",
+    "submitting": "Enviando...",
+    "toast_success_title": "¡Solicitud enviada!",
+    "toast_error_title": "Ups! Parece que algo salió mal. Intenta de nuevo en un momento."
   },
   "contact_page": {
     "title": "Contáctenos",
@@ -121,7 +124,11 @@
     "placeholder_subject": "Consulta sobre un coche",
     "message": "Mensaje",
     "placeholder_message": "Su mensaje aquí...",
-    "send_message": "Enviar Mensaje"
+    "send_message": "Enviar Mensaje",
+    "sending": "Enviando...",
+    "error_message": "Hubo un error al enviar tu mensaje. Por favor, inténtalo de nuevo.",
+    "toast_success_title": "¡Mensaje enviado!",
+    "toast_error_title": "Error al enviar"
   },
   "admin_login": {
     "title": "Acceso de Administrador",

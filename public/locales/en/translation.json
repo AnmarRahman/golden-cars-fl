@@ -262,7 +262,10 @@
     "placeholder_phone_number": "(123) 456-7890",
     "message": "Message",
     "placeholder_message": "Your message here...",
-    "submit_inquiry": "Submit Inquiry"
+    "submit_inquiry": "Submit Inquiry",
+    "submitting": "Submitting...",
+    "toast_success_title": "Inquiry Submitted!",
+    "toast_error_title": "Oops! Looks like something went wrong. Try again in a moment."
   },
   "contact_page": {
     "title": "Contact Us",
@@ -276,7 +279,11 @@
     "placeholder_subject": "Inquiry about a car",
     "message": "Message",
     "placeholder_message": "Your message here...",
-    "send_message": "Send Message"
+    "send_message": "Send Message",
+    "sending": "Sending...",
+    "error_message": "There was an error sending your message. Please try again.",
+    "toast_success_title": "Message Sent!",
+    "toast_error_title": "Sending Failed"
   },
   "admin_login": {
     "title": "Admin Login",

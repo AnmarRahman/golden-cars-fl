@@ -1,5 +1,6 @@
 "use server"
 
+import { useTranslation } from "@/lib/i18n"
 import { createServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
@@ -12,7 +13,10 @@ interface InquiryState {
     message: string
 }
 
-export async function submitInquiry(formData: FormData): Promise<InquiryState> {
+export async function submitInquiry(
+    prevState: InquiryState | null, // Add prevState as the first argument
+    formData: FormData,
+): Promise<InquiryState> {
     const lang = formData.get("lang") as string
     const name = formData.get("name") as string
     const email = formData.get("email") as string
@@ -33,6 +37,12 @@ export async function submitInquiry(formData: FormData): Promise<InquiryState> {
     const car_status = (formData.get("car_status") as string) || null
 
     const supabase = createServerClient()
+    const { t } = await useTranslation(lang, "translation") // Get translation on server
+
+    // Basic validation
+    if (!name || !email || !message || !car_id || !car_name_at_inquiry) {
+        return { status: "error", message: t("inquire_page.form_validation_error") }
+    }
 
     try {
         const { data, error } = await supabase.from("enquiries").insert([
@@ -57,7 +67,7 @@ export async function submitInquiry(formData: FormData): Promise<InquiryState> {
 
         if (error) {
             console.error("Error inserting inquiry:", error)
-            return { status: "error", message: "Failed to submit inquiry. Please try again." }
+            return { status: "error", message: t("inquire_page.error_message") }
         }
 
         try {
@@ -90,9 +100,25 @@ export async function submitInquiry(formData: FormData): Promise<InquiryState> {
         }
 
         revalidatePath(`/${lang}/cars/${car_id}`)
-        return { status: "success", message: "Inquiry submitted successfully!" }
+        return { status: "success", message: t("inquire_page.success_message") }
     } catch (error) {
         console.error("Unexpected error:", error)
-        return { status: "error", message: "An unexpected error occurred." }
+        return { status: "error", message: t("inquire_page.error_message") }
+    }
+}
+
+export async function incrementCarView(carId: string, lang: string) {
+    const supabase = createServerClient()
+    try {
+        const { data, error } = await supabase.rpc("increment_car_views", { car_id_param: carId })
+        if (error) {
+            console.error("Error incrementing car view:", error)
+            return { status: "error", message: "Failed to increment car view." }
+        }
+        revalidatePath(`/${lang}/cars/${carId}`)
+        return { status: "success", message: "Car view incremented." }
+    } catch (error) {
+        console.error("Unexpected error incrementing car view:", error)
+        return { status: "error", message: "Failed to increment car view." }
     }
 }
