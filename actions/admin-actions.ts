@@ -28,7 +28,7 @@ export async function handleChangePassword(formData: FormData, lang: string) {
 }
 
 /**
- * Handles logging out the admin user.
+ * Handles logging out the admin user
  */
 export async function handleLogout(lang: string) {
     const supabase = await createSupabaseServerComponentClient()
