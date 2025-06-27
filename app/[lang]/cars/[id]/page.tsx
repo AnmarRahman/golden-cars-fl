@@ -159,7 +159,7 @@ export default function CarDetailPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 bg-background text-foreground">
-      <div className="relative flex items-center justify-between mb-8">
+      <div className="relative md:flex flex-col items-center justify-between mb-8">
         <Button onClick={() => router.back()} variant="outline">
           {t("car_detail_page.back_to_search_results")}
         </Button>
