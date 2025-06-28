@@ -2,7 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase/server"
 import { jsPDF } from "jspdf"
-import { loadImage, createCanvas } from "canvas"
+import probe from "probe-image-size"
 
 export async function generateCarPDF(carId: string) {
   const supabase = createServerClient()
@@ -22,18 +22,23 @@ export async function generateCarPDF(carId: string) {
   // Add company logo with black background and original size
   try {
     const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/logo-2.png`
-    const img = await loadImage(logoUrl)
 
-    // Draw black background
+    // Fetch logo image buffer
+    const logoResponse = await fetch(logoUrl)
+    const logoBuffer = await logoResponse.arrayBuffer()
+    const logoBase64 = Buffer.from(logoBuffer).toString("base64")
+    const logoDataUrl = `data:image/png;base64,${logoBase64}`
+
+    // Get logo dimensions using probe-image-size
+    const logoMeta = await probe(Buffer.from(logoBuffer))
+
+    // Draw black background rectangle sized to logo (scaled down to fit PDF)
+    const scale = 0.2 // adjust scaling if needed
     doc.setFillColor(0, 0, 0)
-    doc.rect(20, 20, img.width / 5, img.height / 5, "F")
+    doc.rect(20, 20, logoMeta.width * scale, logoMeta.height * scale, "F")
 
-    const canvas = createCanvas(img.width, img.height)
-    const ctx = canvas.getContext("2d")
-    ctx.drawImage(img, 0, 0)
-    const logoDataUrl = canvas.toDataURL()
-
-    doc.addImage(logoDataUrl, "PNG", 20, 20, img.width / 5, img.height / 5)
+    // Add logo image scaled
+    doc.addImage(logoDataUrl, "PNG", 20, 20, logoMeta.width * scale, logoMeta.height * scale)
   } catch (err) {
     console.error("Error loading logo:", err)
   }
@@ -50,17 +55,21 @@ export async function generateCarPDF(carId: string) {
 
   let yPosition = 80
 
-  // Load car image
+  // Load car image with natural dimensions
   if (car.image_url && car.image_url.length > 0) {
     try {
-      const carImg = await loadImage(car.image_url[0])
-      const canvas = createCanvas(carImg.width, carImg.height)
-      const ctx = canvas.getContext("2d")
-      ctx.drawImage(carImg, 0, 0)
-      const carDataUrl = canvas.toDataURL()
+      const carImageUrl = car.image_url[0]
+      const carResponse = await fetch(carImageUrl)
+      const carBuffer = await carResponse.arrayBuffer()
+      const carBase64 = Buffer.from(carBuffer).toString("base64")
+      const carDataUrl = `data:image/jpeg;base64,${carBase64}`
 
-      const scaledWidth = carImg.width / 4
-      const scaledHeight = carImg.height / 4
+      const carMeta = await probe(Buffer.from(carBuffer))
+
+      const scale = 0.25 // adjust scaling here for fitting page nicely
+      const scaledWidth = carMeta.width * scale
+      const scaledHeight = carMeta.height * scale
+
       doc.addImage(carDataUrl, "JPEG", 20, yPosition, scaledWidth, scaledHeight)
 
       yPosition += scaledHeight + 10
@@ -108,7 +117,7 @@ export async function generateCarPDF(carId: string) {
     yPosition += 8
   }
 
-  // Description
+  // Description section
   if (car.description) {
     yPosition += 10
     if (yPosition > 240) {
@@ -130,7 +139,7 @@ export async function generateCarPDF(carId: string) {
     doc.text(splitDescription, 20, yPosition)
   }
 
-  // Footer .
+  // Footer with page numbers
   const pageCount = doc.getNumberOfPages()
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i)
@@ -140,5 +149,6 @@ export async function generateCarPDF(carId: string) {
     doc.text(`Page ${i} of ${pageCount}`, 170, 285)
   }
 
+  // Return base64 PDF URI string
   return doc.output("datauristring")
 }
