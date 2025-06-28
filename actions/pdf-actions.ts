@@ -130,7 +130,7 @@ export async function generateCarPDF(carId: string) {
     doc.text(splitDescription, 20, yPosition)
   }
 
-  // Footer
+  // Footer .
   const pageCount = doc.getNumberOfPages()
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i)
