@@ -26,7 +26,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog"
-import { X, Printer } from "lucide-react" // Added Printer icon
+import { X, Download } from "lucide-react"
 
 interface Car {
   id: string
@@ -89,7 +89,7 @@ interface AdminDashboardClientProps {
     lang: string,
   ) => Promise<{ status: string; message: string }>
   handleUpdateCar: (carId: string, formData: FormData, lang: string) => Promise<{ status: string; message: string }>
-  generateCarPDF: (carId: string) => Promise<string> // New prop for PDF generation
+  generateCarPDF: (carId: string) => Promise<string>
 }
 
 export function AdminDashboardClient({
@@ -105,7 +105,7 @@ export function AdminDashboardClient({
   handleAddCar,
   handleUpdateCarStatus,
   handleUpdateCar,
-  generateCarPDF, // New prop
+  generateCarPDF,
 }: AdminDashboardClientProps) {
   const { t } = useTranslation("translation")
   const router = useRouter()
@@ -114,36 +114,29 @@ export function AdminDashboardClient({
   const [enquiries, setEnquiries] = useState<Enquiry[]>(initialEnquiries)
   const [mostVisitedCars, setMostVisitedCars] = useState<MostVisitedCarStat[]>(initialMostVisitedCars)
   const [isTransitioning, startTransition] = useTransition()
-
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordError, setPasswordError] = useState("")
-
   const [showAddCarDialog, setShowAddCarDialog] = useState(false)
   const [newCarData, setNewCarData] = useState<CarFormData>({ status: "available" })
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([])
   const [addCarError, setAddCarError] = useState("")
-
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false)
   const [carToDelete, setCarToDelete] = useState<string | null>(null)
-
   const addCarBrandInputRef = useRef<HTMLInputElement>(null)
   const addCarModelInputRef = useRef<HTMLInputElement>(null)
   const addCarFormRef = useRef<HTMLFormElement>(null)
-
   const [showBrandDropdown, setShowBrandDropdown] = useState(false)
   const [showModelDropdown, setShowModelDropdown] = useState(false)
-
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadMessage, setUploadMessage] = useState("")
-
   const [isAddingCar, setIsAddingCar] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [isDeletingCar, setIsDeletingCar] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isUpdatingCar, setIsUpdatingCar] = useState(false)
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false) // New state for PDF generation
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState<string | null>(null)
 
   // New states for Edit Car Modal
   const [showEditCarDialog, setShowEditCarDialog] = useState(false)
@@ -163,7 +156,6 @@ export function AdminDashboardClient({
 
   const selectedAddCarBrandData = carData.find((car) => car.brand.toLowerCase() === newCarData.brand?.toLowerCase())
   const availableAddCarModels = selectedAddCarBrandData ? selectedAddCarBrandData.models : []
-
   const filteredAddCarModels = newCarData.model
     ? availableAddCarModels.filter((model) => model.toLowerCase().startsWith(newCarData.model!.toLowerCase()))
     : availableAddCarModels
@@ -175,7 +167,6 @@ export function AdminDashboardClient({
 
   const selectedEditCarBrandData = carData.find((car) => car.brand.toLowerCase() === editCarData.brand?.toLowerCase())
   const availableEditCarModels = selectedEditCarBrandData ? selectedEditCarBrandData.models : []
-
   const filteredEditCarModels = editCarData.model
     ? availableEditCarModels.filter((model) => model.toLowerCase().startsWith(editCarData.model!.toLowerCase()))
     : availableEditCarModels
@@ -222,8 +213,10 @@ export function AdminDashboardClient({
               height = MAX_HEIGHT
             }
           }
+
           canvas.width = width
           canvas.height = height
+
           const ctx = canvas.getContext("2d")
           ctx?.drawImage(img, 0, 0, width, height)
 
@@ -250,16 +243,19 @@ export function AdminDashboardClient({
     if (files) {
       setUploadMessage(t("admin_dashboard.add_new_car.processing_images_client"))
       setUploadProgress(10)
+
       const processedFiles: File[] = []
       for (const file of Array.from(files)) {
         const processedFile = await processImage(file)
         processedFiles.push(processedFile)
       }
+
       if (isEditForm) {
         setEditSelectedImageFiles((prevFiles) => [...prevFiles, ...processedFiles])
       } else {
         setSelectedImageFiles((prevFiles) => [...prevFiles, ...processedFiles])
       }
+
       event.target.value = ""
       setUploadProgress(0)
       setUploadMessage("")
@@ -278,40 +274,45 @@ export function AdminDashboardClient({
     setEditExistingImageUrls((prevUrls) => prevUrls.filter((url) => url !== urlToRemove))
   }
 
-  // New function to handle PDF generation
+  // Improved PDF generation function with better error handling
   const handlePrintCarDetails = async (carId: string) => {
-    setIsGeneratingPDF(true)
+    setIsGeneratingPDF(carId)
     try {
+      toast({
+        title: "Generating PDF",
+        description: "Please wait while we generate the car details PDF...",
+        variant: "default",
+      })
+
       const pdfDataUri = await generateCarPDF(carId)
 
       // Create a link element and trigger download
       const link = document.createElement("a")
       link.href = pdfDataUri
-      link.download = `car-details-${carId}.pdf`
+      link.download = `car-details-${carId}-${new Date().toISOString().split("T")[0]}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
 
       toast({
-        title: "PDF Generated",
-        description: "Car details PDF has been downloaded successfully.",
+        title: "PDF Generated Successfully",
+        description: "Car details PDF has been downloaded to your device.",
         variant: "default",
       })
     } catch (error) {
       console.error("Error generating PDF:", error)
       toast({
         title: "PDF Generation Failed",
-        description: "Failed to generate PDF. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate PDF. Please try again.",
         variant: "destructive",
       })
     } finally {
-      setIsGeneratingPDF(false)
+      setIsGeneratingPDF(null)
     }
   }
 
   const handleSubmitAddCar = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
     if (!newCarData.brand || !newCarData.model) {
       toast({
         title: t("admin_dashboard.add_new_car.validation_error"),
@@ -335,11 +336,12 @@ export function AdminDashboardClient({
     setAddCarError("")
 
     const initialFormData = new FormData(event.currentTarget)
-
     let imageUrls: string[] = []
+
     if (selectedImageFiles.length > 0) {
       const imageFormData = new FormData()
       selectedImageFiles.forEach((file) => imageFormData.append("images", file))
+
       try {
         setUploadMessage(t("admin_dashboard.add_new_car.uploading_images"))
         setUploadProgress(25)
@@ -412,7 +414,6 @@ export function AdminDashboardClient({
 
   const handleSubmitEditCar = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
     if (!editingCar?.id) {
       toast({
         title: t("admin_dashboard.edit_car.error_title"),
@@ -444,11 +445,12 @@ export function AdminDashboardClient({
     setUploadMessage("")
 
     const initialFormData = new FormData(event.currentTarget)
-
     let uploadedNewImageUrls: string[] = []
+
     if (editSelectedImageFiles.length > 0) {
       const imageFormData = new FormData()
       editSelectedImageFiles.forEach((file) => imageFormData.append("images", file))
+
       try {
         setUploadMessage(t("admin_dashboard.edit_car.uploading_images"))
         setUploadProgress(25)
@@ -737,6 +739,7 @@ export function AdminDashboardClient({
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="custom_id_number">{t("admin_dashboard.add_new_car.custom_id_number")}</Label>
                   <Input
@@ -781,6 +784,7 @@ export function AdminDashboardClient({
                   </div>
                 )}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="mileage">{t("admin_dashboard.add_new_car.mileage")}</Label>
                 <Input
@@ -791,6 +795,7 @@ export function AdminDashboardClient({
                   required
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="vin">{t("admin_dashboard.add_new_car.vin")}</Label>
                 <Input
@@ -802,6 +807,7 @@ export function AdminDashboardClient({
                   required
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="model_year">{t("admin_dashboard.add_new_car.model_year")}</Label>
                 <Input
@@ -812,6 +818,7 @@ export function AdminDashboardClient({
                   required
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="price">{t("admin_dashboard.add_new_car.price")}</Label>
                 <Input
@@ -822,6 +829,7 @@ export function AdminDashboardClient({
                   placeholder={t("admin_dashboard.add_new_car.placeholder_price")}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="trim">{t("admin_dashboard.add_new_car.trim")}</Label>
                 <Input
@@ -831,6 +839,7 @@ export function AdminDashboardClient({
                   placeholder={t("admin_dashboard.add_new_car.placeholder_trim")}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="cylinders">{t("admin_dashboard.add_new_car.cylinders")}</Label>
                 <Input
@@ -840,6 +849,7 @@ export function AdminDashboardClient({
                   placeholder={t("admin_dashboard.add_new_car.placeholder_cylinders")}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="body_style">{t("admin_dashboard.add_new_car.body_style")}</Label>
                 <Select name="body_style" defaultValue="null">
@@ -873,6 +883,7 @@ export function AdminDashboardClient({
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="status">{t("admin_dashboard.add_new_car.status")}</Label>
                 <Select
@@ -893,6 +904,7 @@ export function AdminDashboardClient({
                 </Select>
               </div>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="description">{t("admin_dashboard.add_new_car.description")}</Label>
               <Textarea
@@ -902,12 +914,14 @@ export function AdminDashboardClient({
                 rows={4}
               />
             </div>
+
             {(isAddingCar || uploadProgress > 0) && (
               <div className="space-y-2">
                 <Progress value={uploadProgress} className="w-full" />
                 {uploadMessage && <p className="text-sm text-center text-muted-foreground">{uploadMessage}</p>}
               </div>
             )}
+
             <Button type="submit" className="w-full" disabled={isAddingCar}>
               {t("admin_dashboard.add_new_car.add_car")}
             </Button>
@@ -965,6 +979,7 @@ export function AdminDashboardClient({
                       </div>
                     )}
                   </div>
+
                   <CardContent className="flex-grow p-4 space-y-2">
                     <p className="text-lg font-bold">
                       {t("admin_dashboard.manage_cars.table_name")}: {car.name}
@@ -1013,6 +1028,7 @@ export function AdminDashboardClient({
                         count: getDaysSincePosted(car.created_at),
                       })}
                     </p>
+
                     <div className="space-y-1">
                       <Label htmlFor={`status-${car.id}`} className="text-sm font-semibold">
                         {t("admin_dashboard.manage_cars.status")}:
@@ -1035,6 +1051,7 @@ export function AdminDashboardClient({
                       </Select>
                     </div>
                   </CardContent>
+
                   <CardFooter className="p-4 pt-0 flex gap-2">
                     <Button
                       variant="outline"
@@ -1049,10 +1066,19 @@ export function AdminDashboardClient({
                       size="sm"
                       className="flex-1"
                       onClick={() => handlePrintCarDetails(car.id)}
-                      disabled={isGeneratingPDF}
+                      disabled={isGeneratingPDF === car.id}
                     >
-                      <Printer className="h-4 w-4 mr-1" />
-                      {isGeneratingPDF ? "Generating..." : "Print PDF"}
+                      {isGeneratingPDF === car.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-1" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-1" />
+                          Download PDF
+                        </>
+                      )}
                     </Button>
                     <form action={() => handleDeleteCarAction(car.id)} className="flex-1">
                       <Button variant="destructive" size="sm" className="w-full" disabled={isDeletingCar}>
@@ -1251,6 +1277,7 @@ export function AdminDashboardClient({
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="edit_custom_id_number">{t("admin_dashboard.edit_car.custom_id_number")}</Label>
                     <Input
@@ -1346,6 +1373,7 @@ export function AdminDashboardClient({
                     required
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_vin">{t("admin_dashboard.edit_car.vin")}</Label>
                   <Input
@@ -1359,6 +1387,7 @@ export function AdminDashboardClient({
                     required
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_model_year">{t("admin_dashboard.edit_car.model_year")}</Label>
                   <Input
@@ -1371,6 +1400,7 @@ export function AdminDashboardClient({
                     required
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_price">{t("admin_dashboard.edit_car.price")}</Label>
                   <Input
@@ -1383,6 +1413,7 @@ export function AdminDashboardClient({
                     onChange={(e) => setEditCarData({ ...editCarData, price: Number(e.target.value) })}
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_trim">{t("admin_dashboard.edit_car.trim")}</Label>
                   <Input
@@ -1394,6 +1425,7 @@ export function AdminDashboardClient({
                     onChange={(e) => setEditCarData({ ...editCarData, trim: e.target.value })}
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_cylinders">{t("admin_dashboard.edit_car.cylinders")}</Label>
                   <Input
@@ -1405,6 +1437,7 @@ export function AdminDashboardClient({
                     onChange={(e) => setEditCarData({ ...editCarData, cylinders: Number(e.target.value) })}
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_body_style">{t("admin_dashboard.edit_car.body_style")}</Label>
                   <Select
@@ -1427,6 +1460,7 @@ export function AdminDashboardClient({
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_drivetrain">{t("admin_dashboard.edit_car.drivetrain")}</Label>
                   <Select
@@ -1449,6 +1483,7 @@ export function AdminDashboardClient({
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit_status">{t("admin_dashboard.edit_car.status")}</Label>
                   <Select
@@ -1469,6 +1504,7 @@ export function AdminDashboardClient({
                   </Select>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="edit_description">{t("admin_dashboard.edit_car.description")}</Label>
                 <Textarea
@@ -1480,12 +1516,14 @@ export function AdminDashboardClient({
                   onChange={(e) => setEditCarData({ ...editCarData, description: e.target.value })}
                 />
               </div>
+
               {(isUpdatingCar || uploadProgress > 0) && (
                 <div className="space-y-2">
                   <Progress value={uploadProgress} className="w-full" />
                   {uploadMessage && <p className="text-sm text-center text-muted-foreground">{uploadMessage}</p>}
                 </div>
               )}
+
               <DialogFooter>
                 <DialogClose asChild>
                   <Button type="button" variant="outline">

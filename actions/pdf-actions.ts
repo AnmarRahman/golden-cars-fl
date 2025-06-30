@@ -2,7 +2,6 @@
 
 import { createServerClient } from "@/lib/supabase/server"
 import { jsPDF } from "jspdf"
-import probe from "probe-image-size"
 
 export async function generateCarPDF(carId: string) {
   const supabase = createServerClient()
@@ -14,31 +13,93 @@ export async function generateCarPDF(carId: string) {
   }
 
   const doc = new jsPDF()
+  const goldColor = [218, 165, 32] as const
+  const darkGray = [64, 64, 64] as const
+  const lightGray = [128, 128, 128] as const
 
-  const goldColor = [218, 165, 32]
-  const darkGray = [64, 64, 64]
-  const lightGray = [128, 128, 128]
+  // Helper function to convert image to base64 with proper CORS handling
+  const imageToBase64 = async (
+    imageUrl: string,
+  ): Promise<{ dataUrl: string; width: number; height: number } | null> => {
+    try {
+      // Fetch the image with proper headers
+      const response = await fetch(imageUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; PDF-Generator/1.0)",
+        },
+      })
 
-  // Add company logo with black background and original size
+      if (!response.ok) {
+        console.error(`Failed to fetch image: ${response.status} ${response.statusText}`)
+        return null
+      }
+
+      const arrayBuffer = await response.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      // Detect image format from the buffer
+      let mimeType = "image/jpeg" // default
+      let format = "JPEG"
+
+      // Check for PNG signature
+      if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+        mimeType = "image/png"
+        format = "PNG"
+      }
+      // Check for JPEG signature
+      else if (buffer[0] === 0xff && buffer[1] === 0xd8) {
+        mimeType = "image/jpeg"
+        format = "JPEG"
+      }
+      // Check for WebP signature
+      else if (buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
+        mimeType = "image/webp"
+        format = "WEBP"
+      }
+
+      const base64 = buffer.toString("base64")
+      const dataUrl = `data:${mimeType};base64,${base64}`
+
+      // Get image dimensions using a more reliable method
+      return new Promise((resolve) => {
+        // Create a temporary canvas to get image dimensions
+        const img = new Image()
+        img.onload = () => {
+          resolve({
+            dataUrl,
+            width: img.width,
+            height: img.height,
+          })
+        }
+        img.onerror = () => {
+          console.error("Failed to load image for dimension detection")
+          resolve(null)
+        }
+        img.src = dataUrl
+      })
+    } catch (error) {
+      console.error("Error processing image:", error)
+      return null
+    }
+  }
+
+  // Add company logo
   try {
     const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/logo-2.png`
+    const logoData = await imageToBase64(logoUrl)
 
-    // Fetch logo image buffer
-    const logoResponse = await fetch(logoUrl)
-    const logoBuffer = await logoResponse.arrayBuffer()
-    const logoBase64 = Buffer.from(logoBuffer).toString("base64")
-    const logoDataUrl = `data:image/png;base64,${logoBase64}`
+    if (logoData) {
+      const scale = 0.2
+      const scaledWidth = logoData.width * scale
+      const scaledHeight = logoData.height * scale
 
-    // Get logo dimensions using probe-image-size
-    const logoMeta = await probe(Buffer.from(logoBuffer))
+      // Draw black background rectangle
+      doc.setFillColor(0, 0, 0)
+      doc.rect(20, 20, scaledWidth, scaledHeight, "F")
 
-    // Draw black background rectangle sized to logo (scaled down to fit PDF)
-    const scale = 0.2 // adjust scaling if needed
-    doc.setFillColor(0, 0, 0)
-    doc.rect(20, 20, logoMeta.width * scale, logoMeta.height * scale, "F")
-
-    // Add logo image scaled
-    doc.addImage(logoDataUrl, "PNG", 20, 20, logoMeta.width * scale, logoMeta.height * scale)
+      // Add logo image
+      doc.addImage(logoData.dataUrl, "PNG", 20, 20, scaledWidth, scaledHeight)
+    }
   } catch (err) {
     console.error("Error loading logo:", err)
   }
@@ -48,33 +109,55 @@ export async function generateCarPDF(carId: string) {
   doc.setFontSize(24)
   doc.setFont("helvetica", "bold")
   doc.text("Vehicle Details Report", 20, 60)
-
   doc.setDrawColor(goldColor[0], goldColor[1], goldColor[2])
   doc.setLineWidth(2)
   doc.line(20, 65, 190, 65)
 
   let yPosition = 80
 
-  // Load car image with natural dimensions
+  // Add car image with improved handling
   if (car.image_url && car.image_url.length > 0) {
     try {
       const carImageUrl = car.image_url[0]
-      const carResponse = await fetch(carImageUrl)
-      const carBuffer = await carResponse.arrayBuffer()
-      const carBase64 = Buffer.from(carBuffer).toString("base64")
-      const carDataUrl = `data:image/jpeg;base64,${carBase64}`
+      const carImageData = await imageToBase64(carImageUrl)
 
-      const carMeta = await probe(Buffer.from(carBuffer))
+      if (carImageData) {
+        const maxWidth = 150
+        const maxHeight = 100
 
-      const scale = 0.25 // adjust scaling here for fitting page nicely
-      const scaledWidth = carMeta.width * scale
-      const scaledHeight = carMeta.height * scale
+        // Calculate scaled dimensions while maintaining aspect ratio
+        let scaledWidth = carImageData.width
+        let scaledHeight = carImageData.height
 
-      doc.addImage(carDataUrl, "JPEG", 20, yPosition, scaledWidth, scaledHeight)
+        if (scaledWidth > maxWidth) {
+          scaledHeight = (scaledHeight * maxWidth) / scaledWidth
+          scaledWidth = maxWidth
+        }
 
-      yPosition += scaledHeight + 10
+        if (scaledHeight > maxHeight) {
+          scaledWidth = (scaledWidth * maxHeight) / scaledHeight
+          scaledHeight = maxHeight
+        }
+
+        // Determine format based on the original image
+        const format = carImageData.dataUrl.includes("data:image/png") ? "PNG" : "JPEG"
+
+        doc.addImage(carImageData.dataUrl, format, 20, yPosition, scaledWidth, scaledHeight)
+        yPosition += scaledHeight + 10
+      } else {
+        // Add placeholder text if image fails to load
+        doc.setFontSize(12)
+        doc.setTextColor(lightGray[0], lightGray[1], lightGray[2])
+        doc.text("Image could not be loaded", 20, yPosition)
+        yPosition += 20
+      }
     } catch (err) {
       console.error("Error loading car image:", err)
+      // Add error message to PDF
+      doc.setFontSize(12)
+      doc.setTextColor(lightGray[0], lightGray[1], lightGray[2])
+      doc.text("Image loading failed", 20, yPosition)
+      yPosition += 20
     }
   }
 
@@ -134,7 +217,6 @@ export async function generateCarPDF(carId: string) {
     doc.setFontSize(12)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2])
-
     const splitDescription = doc.splitTextToSize(car.description, 170)
     doc.text(splitDescription, 20, yPosition)
   }
