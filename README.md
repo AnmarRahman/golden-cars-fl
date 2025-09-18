@@ -41,32 +41,32 @@ Admin Panel
 
 1. Clone the repository:
 
-git clone https://github.com/AnmarRahman/golden-cars-fl.git
-cd golden-cars-fl
+  git clone https://github.com/AnmarRahman/golden-cars-fl.git
+  cd golden-cars-fl
 
 2. Install dependencies:
 
-npm install
+  npm install
 
 3. Configure environment variables (.env.local):
 
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+  NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+  SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 4. Run Supabase SQL scripts to set up the database tables and initial data:
 
-The scripts are located in the scripts/ folder.
+  The scripts are located in the scripts/ folder.
 
-Open the Supabase SQL editor and execute each script to initialize your database.
+  Open the Supabase SQL editor and execute each script to initialize your database.
 
 5. Start the development server:
 
-npm run dev
+  npm run dev
 
-Visit the app at http://localhost:3000
+  Visit the app at http://localhost:3000
 
 📸 Screenshots
 
