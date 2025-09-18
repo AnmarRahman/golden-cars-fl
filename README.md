@@ -70,21 +70,21 @@ Admin Panel
 
 📸 Screenshots
 
-<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/8148f703-1d08-4375-8961-bd8e290a69d7" />  
+<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/8148f703-1d08-4375-8961-bd8e290a69d7" /><br />
 
-<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/d7fef23a-42ed-4bf4-a2b8-0553b635387f" />  
+<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/d7fef23a-42ed-4bf4-a2b8-0553b635387f" /><br />
 
-<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/e1dcd115-2a3c-4a16-aabb-b36e78365c5d" />  
+<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/e1dcd115-2a3c-4a16-aabb-b36e78365c5d" /><br />
 
-<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/fceabb6b-2f7e-47d0-b201-c374df7badbf" />  
+<img width="1878" height="931" alt="image" src="https://github.com/user-attachments/assets/fceabb6b-2f7e-47d0-b201-c374df7badbf" /><br />
 
-<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/eabd24be-30ae-4722-bb16-b535fdb049fc" />  
+<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/eabd24be-30ae-4722-bb16-b535fdb049fc" /><br />
 
-<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/60fd6b46-ae6c-41a8-8734-7a5f031f88fb" />  
+<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/60fd6b46-ae6c-41a8-8734-7a5f031f88fb" /><br />
 
-<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/3894c946-39ca-4245-ac97-2365a1d1da52" />  
+<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/3894c946-39ca-4245-ac97-2365a1d1da52" /><br />
 
-<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/6fe80d4f-b9a6-4095-8b2a-565c651bc06b" />
+<img width="390" height="844" alt="image" src="https://github.com/user-attachments/assets/6fe80d4f-b9a6-4095-8b2a-565c651bc06b" /><br />
 
 🔗 Live Demo
 
