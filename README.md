@@ -51,7 +51,9 @@ npm install
 3. Configure environment variables (.env.local):
 
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 4. Run Supabase SQL scripts to set up the database tables and initial data:
