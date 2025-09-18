@@ -26,8 +26,8 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))", // This will be gold
-          foreground: "hsl(var(--primary-foreground))", // This will be dark for contrast
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -54,7 +54,7 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
         gold: {
-          DEFAULT: "#FFD700", // Pure gold color
+          DEFAULT: "#FFD700",
         },
       },
       borderRadius: {
@@ -65,7 +65,7 @@ const config = {
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
-        "wdxl-lubrifont-sc": ["WDXL Lubrifont SC", "sans-serif"], // Add this line
+        "wdxl-lubrifont-sc": ["WDXL Lubrifont SC", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
@@ -83,7 +83,10 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("tailwind-scrollbar-hide"),
+  ],
 } satisfies Config
 
 export default config
