@@ -88,46 +88,40 @@ export default function CarPreApprovalPage() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-
-    try {
-      const supabase = createClient()
-      
-      const { error } = await supabase
-        .from('pre_approvals')
-        .insert({
-          car_id: carId,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          down_payment: parseFloat(formData.downPayment),
-          employment_status: formData.employmentStatus,
-          monthly_income: parseFloat(formData.monthlyIncome),
-          status: 'pending'
-        })
-
-      if (error) throw error
-
-      toast({
-        title: 'Success!',
-        description: 'Your pre-approval request has been submitted.'
-      })
-
-      router.push('/pre-approval/success')
-    } catch (err) {
-      console.error('Error submitting form:', err)
-      toast({
-        title: 'Error',
-        description: 'Failed to submit pre-approval request. Please try again.',
-        variant: 'destructive'
-      })
-    } finally {
-      setSubmitting(false)
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setSubmitting(true)
+  try {
+    // Mock submission - log data and redirect (no backend)
+    console.log('Pre-approval form submitted:', {
+      ...formData,
+      carId,
+      car
+    })
+    
+    // Simulate API delay
+    await new Promise(r => setTimeout(r, 600))
+    
+    const lang = params.lang as string
+    
+    toast({
+      title: 'Success!',
+      description: 'Your pre-approval request has been submitted.'
+    })
+    
+    router.push(`/${lang}/pre-approval/success`)
+  } catch (err) {
+    console.error('Error submitting form:', err)
+    toast({
+      title: 'Error',
+      description: 'Failed to submit pre-approval request. Please try again.',
+      variant: 'destructive'
+    })
+  } finally {
+    setSubmitting(false)
   }
+}
+
 
   if (loading) {
     return (
