@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClientClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -54,7 +54,7 @@ export default function CarPreApprovalPage() {
     const fetchCarDetails = async () => {
       try {
         setLoading(true)
-        const supabase = createClient()
+        const supabase = createClientClient()
         
         const { data, error } = await supabase
           .from('cars')
