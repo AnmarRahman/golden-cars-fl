@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CarCard } from "@/components/car-card";
 import { SearchForm } from "@/components/search-form";
 import Link from "next/link";
-import initTranslations from "@/app/i18n";
+import { useTranslation } from "@/lib/i18n";
 
 interface SearchParams {
   [key: string]: string | string[] | undefined;
@@ -67,7 +67,7 @@ export default async function CarsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { lang } = await params;
-  const { t } = await initTranslations(lang, ["common"]);
+  const { t } = await useTranslation(lang, ["common"]);
   const resolvedSearchParams = await searchParams;
   const cars = await getCars(resolvedSearchParams);
 
