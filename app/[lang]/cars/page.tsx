@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createSupabaseServerComponentClient } from "@/lib/supabase/server";
 import { CarCard } from "@/components/car-card";
 import { SearchForm } from "@/components/search-form";
 import Link from "next/link";
@@ -22,7 +22,7 @@ interface Car {
 }
 
 async function getCars(searchParams: SearchParams = {}): Promise<Car[]> {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerComponentClient();
   let query = supabase.from("cars").select("*");
 
   // Apply filters if present
