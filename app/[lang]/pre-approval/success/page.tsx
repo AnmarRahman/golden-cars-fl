@@ -1,8 +1,7 @@
 'use client'
-
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useTranslation } from '@/hooks/useTranslation'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle } from 'lucide-react'
@@ -34,52 +33,3 @@ export default function PreApprovalSuccessPage() {
               <p className="text-sm text-muted-foreground font-medium">Reference Number</p>
               <p className="text-2xl font-mono font-bold tracking-wider">{referenceNumber}</p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Please save this reference number for your records
-            </p>
-          </div>
-
-          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-6 rounded-lg space-y-2">
-            <h3 className="font-semibold text-lg">What's Next?</h3>
-            <ul className="space-y-2 text-sm">
-              <li className="flex gap-2">
-                <span className="text-blue-600 dark:text-blue-400">•</span>
-                <span>You'll receive your personalized rates once your credit report has been processed</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 dark:text-blue-400">•</span>
-                <span>A member of our team will contact you within 24-48 hours</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 dark:text-blue-400">•</span>
-                <span>Check your email for additional information and next steps</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button 
-              asChild 
-              className="flex-1"
-              size="lg"
-            >
-              <Link href="/cars">
-                Browse Cars
-              </Link>
-            </Button>
-            <Button 
-              variant="outline" 
-              asChild 
-              className="flex-1"
-              size="lg"
-            >
-              <Link href="/">
-                Return to Home
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
