@@ -13,7 +13,7 @@ interface Car {
   id: number;
   make: string;
   model: string;
-  year: number;
+  model_year: number;
   price: number;
   mileage: number;
   image_url: string | null;
@@ -33,10 +33,10 @@ async function getCars(searchParams: SearchParams = {}): Promise<Car[]> {
     query = query.eq("model", searchParams.model);
   }
   if (searchParams.minYear && typeof searchParams.minYear === "string") {
-    query = query.gte("year", parseInt(searchParams.minYear));
+    query = query.gte("model_year", parseInt(searchParams.minYear));
   }
   if (searchParams.maxYear && typeof searchParams.maxYear === "string") {
-    query = query.lte("year", parseInt(searchParams.maxYear));
+    query = query.lte("model_year", parseInt(searchParams.maxYear));
   }
   if (searchParams.minPrice && typeof searchParams.minPrice === "string") {
     query = query.gte("price", parseFloat(searchParams.minPrice));
@@ -67,7 +67,7 @@ export default async function CarsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { lang } = await params;
-  const { t } = await useTranslation(lang, ["common"]);
+  const { t } = await useTranslation(lang, ["translation"]);
   const resolvedSearchParams = await searchParams;
   const cars = await getCars(resolvedSearchParams);
 
@@ -76,13 +76,6 @@ export default async function CarsPage({
       <h1 className="text-4xl font-bold mb-8 text-center">
         {t("cars_page.title")}
       </h1>
-      
-      <Link
-        href="/pre-approval"
-        className="mb-6 inline-flex items-center justify-center px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors"
-      >
-        Get Pre-Approved
-      </Link>
       
       <div className="mb-12">
         <Suspense
