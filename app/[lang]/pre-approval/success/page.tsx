@@ -1,17 +1,28 @@
 'use client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export default function PreApprovalSuccessPage() {
   const router = useRouter()
   const { t } = useTranslation()
+  const searchParams = useSearchParams()
+  const [referenceNumber, setReferenceNumber] = useState<string>('')
   
-  // Generate a mock reference number
-  const referenceNumber = `PRE-${Math.random().toString(36).substring(2, 9).toUpperCase()}-${Date.now().toString().slice(-6)}`
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) {
+      setReferenceNumber(ref)
+    } else {
+      // Generate a fallback reference number if none provided
+      const fallback = `PRE-${Math.random().toString(36).substring(2, 9).toUpperCase()}-${Date.now().toString().slice(-6)}`
+      setReferenceNumber(fallback)
+    }
+  }, [searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
