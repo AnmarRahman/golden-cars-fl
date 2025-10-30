@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -21,10 +20,7 @@ type FormValues = {
   email: string
   phone: string
   dob: string // YYYY-MM-DD
-  ssn?: string
-  driversLicenseNumber?: string
-  driversLicenseState?: string
-  driversLicenseExpiry?: string
+  ssn: string
 
   // Residential Information
   streetAddress: string
@@ -59,11 +55,58 @@ type FormValues = {
 export default function PreApprovalPage() {
   const router = useRouter()
   const { lang } = useParams() as { lang: string }
-  const { register, handleSubmit } = useForm<FormValues>()
+  const { register, handleSubmit, reset } = useForm<FormValues>()
 
-  const onSubmit = (data: FormValues) => {
-    console.log('Pre-approval form submitted', data)
-    router.push(`/${lang}/pre-approval/confirm`)
+  const onSubmit = async (data: FormValues) => {
+    try {
+      // Insert into Supabase pre_approval_applications
+      const res = await fetch('/api/pre-approval', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reference_number: `PRE-${Math.random().toString(36).substring(2, 9).toUpperCase()}-${Date.now().toString().slice(-6)}`,
+          first_name: data.firstName,
+          middle_name: data.middleName,
+          last_name: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          date_of_birth: data.dob,
+          ssn: data.ssn,
+          street_address: data.streetAddress,
+          unit_apt: data.unit,
+          city: data.city,
+          state: data.state,
+          zip: data.zip,
+          housing_status: data.housingStatus,
+          monthly_housing_payment: data.monthlyHousingPayment,
+          time_at_address_years: data.timeAtAddressYears,
+          time_at_address_months: data.timeAtAddressMonths,
+          employment_status: data.employmentStatus,
+          employer_name: data.employerName,
+          job_title: data.jobTitle,
+          employer_phone: data.employerPhone,
+          monthly_income: data.monthlyIncome,
+          time_at_job_years: data.timeAtJobYears,
+          time_at_job_months: data.timeAtJobMonths,
+          other_income_source: data.otherIncomeSource,
+          other_monthly_income: data.otherMonthlyIncome,
+          vehicle_year: data.vehicleYear,
+          vehicle_make: data.vehicleMake,
+          vehicle_model: data.vehicleModel,
+          vehicle_trim: data.vehicleTrim,
+          down_payment: data.downPayment,
+          status: 'pending'
+        })
+      })
+
+      if (!res.ok) throw new Error('Failed to submit application')
+
+      reset()
+      router.push(`/${lang}/pre-approval/success`)
+    } catch (e) {
+      console.error(e)
+      alert('Failed to submit application. Please try again.')
+    }
   }
 
   return (
@@ -78,7 +121,7 @@ export default function PreApprovalPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" {...register('firstName')} />
+                <Input id="firstName" placeholder="John" {...register('firstName', { required: true })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="middleName">Middle Name</Label>
@@ -86,19 +129,23 @@ export default function PreApprovalPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" {...register('lastName')} />
+                <Input id="lastName" placeholder="Doe" {...register('lastName', { required: true })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john.doe@email.com" {...register('email')} />
+                <Input id="email" type="email" placeholder="john.doe@email.com" {...register('email', { required: true })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" placeholder="(555) 555-5555" {...register('phone')} />
+                <Input id="phone" placeholder="(555) 555-5555" {...register('phone', { required: true })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dob">Date of Birth</Label>
                 <Input id="dob" type="date" {...register('dob')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ssn">Social Security Number</Label>
+                <Input id="ssn" placeholder="XXX-XX-XXXX" {...register('ssn', { required: true })} />
               </div>
             </div>
 
