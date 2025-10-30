@@ -7,7 +7,8 @@
   "hero": {
     "title": "GOLDEN CARS FL",
     "subtitle": "Su destino principal para vehículos de lujo y alto rendimiento en Tampa, FL. Descubra el coche de sus sueños hoy.",
-    "explore_inventory": "Explorar Nuestro Inventario"
+    "explore_inventory": "Explorar Nuestro Inventario",
+    "get_pre_approved": "Obtener Pre-Aprobación"
   },
   "services": {
     "title": "Nuestros Servicios Especializados",
@@ -40,14 +41,42 @@
     "model": "Modelo",
     "trim": "Versión",
     "cylinders": "Cilindros",
-    "status": "Estado"
+    "status": "Estado",
+    "get_pre_approved": "Obtener Pre-Aprobación para Este Coche"
   },
   "car_detail_page": {
     "loading_details": "Cargando detalles del coche...",
     "failed_to_load": "No se pudieron cargar los detalles del coche.",
     "not_available": "Detalles del coche no disponibles.",
     "description": "Descripción",
-    "back_to_search_results": "Volver a los Resultados de Búsqueda"
+    "back_to_search_results": "Volver a los Resultados de Búsqueda",
+    "get_pre_approved": "Obtener Pre-Aprobación para Este Coche"
+  },
+  "pre_approval": {
+    "page_title": "Obtener Pre-Aprobación",
+    "page_description": "Complete este formulario para obtener la pre-aprobación de financiamiento",
+    "car_title": "Solicitud de Pre-Aprobación",
+    "car_description": "Complete este formulario para obtener la pre-aprobación de financiamiento para este vehículo",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "email": "Correo Electrónico",
+    "phone": "Teléfono",
+    "ssn": "Número de Seguro Social",
+    "ssn_placeholder": "XXX-XX-XXXX",
+    "down_payment": "Pago Inicial ($)",
+    "employment_status": "Estado de Empleo",
+    "employed": "Empleado",
+    "self_employed": "Autónomo",
+    "unemployed": "Desempleado",
+    "retired": "Jubilado",
+    "monthly_income": "Ingreso Mensual ($)",
+    "submit_application": "Enviar Solicitud",
+    "submitting": "Enviando...",
+    "cancel": "Cancelar",
+    "success_title": "¡Éxito!",
+    "success_description": "Su solicitud de pre-aprobación ha sido enviada.",
+    "error_title": "Error",
+    "error_description": "Error al enviar la solicitud de pre-aprobación. Por favor, inténtelo de nuevo."
   },
   "search_form": {
     "search_by_name_keyword": "Buscar por Nombre/Palabra Clave",
@@ -272,6 +301,26 @@
       "status_update_success_title": "¡Estado Actualizado!",
       "status_update_error_title": "Error al Actualizar Estado",
       "failed_to_update_status": "Error al actualizar el estado del coche. Por favor, inténtelo de nuevo."
+    },
+    "pre_approval_applications": {
+      "title": "Solicitudes de Pre-Aprobación",
+      "description": "Ver y gestionar las solicitudes de pre-aprobación de los clientes.",
+      "table_reference": "Referencia #",
+      "table_name": "Nombre",
+      "table_email": "Correo Electrónico",
+      "table_phone": "Teléfono",
+      "table_car": "Coche",
+      "table_income": "Ingreso Mensual",
+      "table_down_payment": "Pago Inicial",
+      "table_status": "Estado",
+      "table_date": "Fecha",
+      "table_actions": "Acciones",
+      "export_csv": "Exportar CSV",
+      "no_applications": "No se encontraron solicitudes de pre-aprobación.",
+      "status_pending": "Pendiente",
+      "status_approved": "Aprobado",
+      "status_rejected": "Rechazado",
+      "car_deleted": "Coche Eliminado"
     },
     "most_visited_cars": {
       "title": "Coches Más Visitados",

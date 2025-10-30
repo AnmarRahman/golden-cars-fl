@@ -1,5 +1,6 @@
-"use client" // This page needs to be a client component for image carousel and back button
+"use client"
 
+// This page needs to be a client component for image carousel and back button
 import { createClientClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
@@ -37,7 +38,6 @@ export default function CarDetailPage() {
   const carId = params.id as string
   const lang = params.lang as string
   const { t, i18n } = useTranslation()
-
   const [car, setCar] = useState<Car | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -219,6 +219,7 @@ export default function CarDetailPage() {
           <h2 className="text-3xl font-bold text-primary">
             {car.price !== null ? `$${car.price.toLocaleString()}` : t("cars_page.call_for_price")}
           </h2>
+
           <div className="grid grid-cols-2 gap-4 text-lg">
             <p>
               <span className="font-semibold">{t("cars_page.year")}:</span> {car.model_year}
@@ -268,12 +269,18 @@ export default function CarDetailPage() {
               </p>
             )}
           </div>
+
           <div className="space-y-2">
             <h3 className="font-semibold text-xl text-foreground">{t("car_detail_page.description")}:</h3>
             <p className="text-muted-foreground">{car.description}</p>
           </div>
+
           <Link href={`/${i18n.language}/cars/${car.id}/inquire?source=detail`} className="block">
             <Button className="w-full py-3 text-lg">{t("cars_page.inquire_now")}</Button>
+          </Link>
+
+          <Link href={`/${i18n.language}/pre-approval/${carId}`} className="block">
+            <Button className="w-full py-3 text-lg bg-yellow-500 hover:bg-yellow-600 text-black font-semibold">{t("cars_page.get_pre_approved")}</Button>
           </Link>
         </div>
       </div>

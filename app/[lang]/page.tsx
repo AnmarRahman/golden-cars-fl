@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import { useTranslation } from "@/lib/i18n"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Package, Globe, Truck } from "lucide-react" // Import icons
+import Link from "next/link"
 
 export default async function HomePage(props: { params: Promise<{ lang: string }> }) {
   const { lang } = await props.params // Await params to get the lang property
@@ -26,11 +27,18 @@ export default async function HomePage(props: { params: Promise<{ lang: string }
             {t("hero.title")}
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl text-gray-200 max-w-3xl mb-8">{t("hero.subtitle")}</p>
-          <a href={`/${lang}/cars`}>
-            <Button size="lg" className="text-lg px-8 py-3">
-              {t("hero.explore_inventory")}
-            </Button>
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link href={`/${lang}/cars`}>
+              <Button size="lg" className="text-lg px-8 py-3">
+                {t("hero.explore_inventory")}
+              </Button>
+            </Link>
+            <Link href={`/${lang}/pre-approval`}>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-3 bg-white/10 border-white/20 text-white hover:bg-white/20">
+                {t("hero.get_pre_approved")}
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

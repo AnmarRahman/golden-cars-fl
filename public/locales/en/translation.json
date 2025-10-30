@@ -137,6 +137,26 @@
       "status_update_error_title": "Status Update Failed",
       "failed_to_update_status": "Failed to update car status. Please try again."
     },
+    "pre_approval_applications": {
+      "title": "Pre-Approval Applications",
+      "description": "View and manage customer pre-approval applications.",
+      "table_reference": "Reference #",
+      "table_name": "Name",
+      "table_email": "Email",
+      "table_phone": "Phone",
+      "table_car": "Car",
+      "table_income": "Monthly Income",
+      "table_down_payment": "Down Payment",
+      "table_status": "Status",
+      "table_date": "Date",
+      "table_actions": "Actions",
+      "export_csv": "Export CSV",
+      "no_applications": "No pre-approval applications found.",
+      "status_pending": "Pending",
+      "status_approved": "Approved",
+      "status_rejected": "Rejected",
+      "car_deleted": "Car Deleted"
+    },
     "most_visited_cars": {
       "title": "Most Visited Cars",
       "description": "Top 5 cars by view count.",
@@ -162,7 +182,8 @@
   "hero": {
     "title": "GOLDEN CARS FL",
     "subtitle": "Your premier destination for luxury and performance vehicles in Tampa, FL. Discover your dream car today.",
-    "explore_inventory": "Explore Our Inventory"
+    "explore_inventory": "Explore Our Inventory",
+    "get_pre_approved": "Get Pre-Approved"
   },
   "services": {
     "title": "Our Specialized Services",
@@ -195,14 +216,42 @@
     "model": "Model",
     "trim": "Trim",
     "cylinders": "Cylinders",
-    "status": "Status"
+    "status": "Status",
+    "get_pre_approved": "Get Pre-Approved for This Car"
   },
   "car_detail_page": {
     "loading_details": "Loading car details...",
     "failed_to_load": "Failed to load car details.",
     "not_available": "Car details not available.",
     "description": "Description",
-    "back_to_search_results": "Back to Search Results"
+    "back_to_search_results": "Back to Search Results",
+    "get_pre_approved": "Get Pre-Approved for This Car"
+  },
+  "pre_approval": {
+    "page_title": "Get Pre-Approved",
+    "page_description": "Complete this form to get pre-approved for financing",
+    "car_title": "Pre-Approval Application",
+    "car_description": "Complete this form to get pre-approved for financing this vehicle",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "ssn": "Social Security Number",
+    "ssn_placeholder": "XXX-XX-XXXX",
+    "down_payment": "Down Payment ($)",
+    "employment_status": "Employment Status",
+    "employed": "Employed",
+    "self_employed": "Self-Employed",
+    "unemployed": "Unemployed",
+    "retired": "Retired",
+    "monthly_income": "Monthly Income ($)",
+    "submit_application": "Submit Application",
+    "submitting": "Submitting...",
+    "cancel": "Cancel",
+    "success_title": "Success!",
+    "success_description": "Your pre-approval request has been submitted.",
+    "error_title": "Error",
+    "error_description": "Failed to submit pre-approval request. Please try again."
   },
   "search_form": {
     "search_by_name_keyword": "Search by Name/Keyword",
