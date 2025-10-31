@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { useTranslation } from 'react-i18next'
+import { useInitTranslation } from '@/lib/i18n/use-translation'
+import { Loader2 } from 'lucide-react'
 
 interface Car {
   id: string
@@ -59,13 +61,18 @@ export default function CarPreApprovalPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const { t } = useTranslation()
+  const { lang } = params.lang as string
   const carId = params.id as string
+
+  // Initialize translations for this page
+  useInitTranslation(lang, 'translation')
+  const { t } = useTranslation()
 
   const [car, setCar] = useState<Car | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [showLoading, setShowLoading] = useState(false)
 
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -185,15 +192,37 @@ export default function CarPreApprovalPage() {
           vehicle_trim: formData.vehicleTrim
         })
       if (error) throw error
-      const lang = params.lang as string
-      toast({ title: t('pre_approval.success_title'), description: t('pre_approval.success_description') })
-      router.push(`/${lang}/pre-approval/success?ref=${referenceNumber}`)
+      
+      // Show loading state for ~10 seconds
+      setSubmitting(false)
+      setShowLoading(true)
+      
+      setTimeout(() => {
+        toast({ title: t('pre_approval.success_title'), description: t('pre_approval.success_description') })
+        router.push(`/${lang}/pre-approval/success?ref=${referenceNumber}`)
+      }, 10000)
+      
     } catch (err) {
       console.error('Error submitting form:', err)
-      toast({ title: t('pre_approval.error_title'), description: t('pre_approval.error_description'), variant: 'destructive' })
-    } finally {
       setSubmitting(false)
+      toast({ title: t('pre_approval.error_title'), description: t('pre_approval.error_description'), variant: 'destructive' })
     }
+  }
+
+  if (showLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="pt-8">
+            <div className="flex justify-center mb-6">
+              <Loader2 className="w-16 h-16 animate-spin text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-4">{t('pre_approval.loading_title')}</h2>
+            <p className="text-muted-foreground text-lg">{t('pre_approval.loading_message')}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (loading) {
@@ -247,137 +276,137 @@ export default function CarPreApprovalPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pre-Approval Application</CardTitle>
-          <CardDescription>Complete this form to get pre-approved for financing this vehicle</CardDescription>
+          <CardTitle>{t('pre_approval.car_title')}</CardTitle>
+          <CardDescription>{t('pre_approval.car_description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="firstName">{t('pre_approval.first_name')}</Label>
               <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="middleName">Middle Name</Label>
+              <Label htmlFor="middleName">{t('pre_approval.middle_name')}</Label>
               <Input id="middleName" name="middleName" value={formData.middleName} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="lastName">{t('pre_approval.last_name')}</Label>
               <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Label htmlFor="dateOfBirth">{t('pre_approval.date_of_birth')}</Label>
               <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('pre_approval.email')}</Label>
               <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t('pre_approval.phone')}</Label>
               <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="streetAddress">Street Address</Label>
+              <Label htmlFor="streetAddress">{t('pre_approval.street_address')}</Label>
               <Input id="streetAddress" name="streetAddress" value={formData.streetAddress} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unitApt">Unit/Apt</Label>
+              <Label htmlFor="unitApt">{t('pre_approval.unit_apt')}</Label>
               <Input id="unitApt" name="unitApt" value={formData.unitApt} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">{t('pre_approval.city')}</Label>
               <Input id="city" name="city" value={formData.city} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
+              <Label htmlFor="state">{t('pre_approval.state')}</Label>
               <Input id="state" name="state" value={formData.state} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="zip">ZIP Code</Label>
+              <Label htmlFor="zip">{t('pre_approval.zip')}</Label>
               <Input id="zip" name="zip" value={formData.zip} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="housingStatus">Housing Status</Label>
+              <Label htmlFor="housingStatus">{t('pre_approval.housing_status')}</Label>
               <Input id="housingStatus" name="housingStatus" value={formData.housingStatus} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="monthlyHousingPayment">Monthly Housing Payment</Label>
+              <Label htmlFor="monthlyHousingPayment">{t('pre_approval.monthly_housing_payment')}</Label>
               <Input id="monthlyHousingPayment" name="monthlyHousingPayment" value={formData.monthlyHousingPayment} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timeAtAddressYears">Time at Address (Years)</Label>
+              <Label htmlFor="timeAtAddressYears">{t('pre_approval.time_at_address_years')}</Label>
               <Input id="timeAtAddressYears" name="timeAtAddressYears" value={formData.timeAtAddressYears} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timeAtAddressMonths">Time at Address (Months)</Label>
+              <Label htmlFor="timeAtAddressMonths">{t('pre_approval.time_at_address_months')}</Label>
               <Input id="timeAtAddressMonths" name="timeAtAddressMonths" value={formData.timeAtAddressMonths} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="employmentStatus">Employment Status</Label>
+              <Label htmlFor="employmentStatus">{t('pre_approval.employment_status')}</Label>
               <Input id="employmentStatus" name="employmentStatus" value={formData.employmentStatus} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="employerName">Employer Name</Label>
+              <Label htmlFor="employerName">{t('pre_approval.employer_name')}</Label>
               <Input id="employerName" name="employerName" value={formData.employerName} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="jobTitle">Job Title</Label>
+              <Label htmlFor="jobTitle">{t('pre_approval.job_title')}</Label>
               <Input id="jobTitle" name="jobTitle" value={formData.jobTitle} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="employerPhone">Employer Phone</Label>
+              <Label htmlFor="employerPhone">{t('pre_approval.employer_phone')}</Label>
               <Input id="employerPhone" name="employerPhone" value={formData.employerPhone} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timeAtJobYears">Time at Job (Years)</Label>
+              <Label htmlFor="timeAtJobYears">{t('pre_approval.time_at_job_years')}</Label>
               <Input id="timeAtJobYears" name="timeAtJobYears" value={formData.timeAtJobYears} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timeAtJobMonths">Time at Job (Months)</Label>
+              <Label htmlFor="timeAtJobMonths">{t('pre_approval.time_at_job_months')}</Label>
               <Input id="timeAtJobMonths" name="timeAtJobMonths" value={formData.timeAtJobMonths} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="monthlyIncome">Monthly Income</Label>
+              <Label htmlFor="monthlyIncome">{t('pre_approval.monthly_income')}</Label>
               <Input id="monthlyIncome" name="monthlyIncome" value={formData.monthlyIncome} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="otherIncomeSource">Other Income Source</Label>
+              <Label htmlFor="otherIncomeSource">{t('pre_approval.other_income_source')}</Label>
               <Input id="otherIncomeSource" name="otherIncomeSource" value={formData.otherIncomeSource} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="otherMonthlyIncome">Other Monthly Income</Label>
+              <Label htmlFor="otherMonthlyIncome">{t('pre_approval.other_monthly_income')}</Label>
               <Input id="otherMonthlyIncome" name="otherMonthlyIncome" value={formData.otherMonthlyIncome} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="vehicleYear">Vehicle Year</Label>
+              <Label htmlFor="vehicleYear">{t('pre_approval.vehicle_year')}</Label>
               <Input id="vehicleYear" name="vehicleYear" value={formData.vehicleYear} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="vehicleMake">Make</Label>
+              <Label htmlFor="vehicleMake">{t('pre_approval.vehicle_make')}</Label>
               <Input id="vehicleMake" name="vehicleMake" value={formData.vehicleMake} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="vehicleModel">Model</Label>
+              <Label htmlFor="vehicleModel">{t('pre_approval.vehicle_model')}</Label>
               <Input id="vehicleModel" name="vehicleModel" value={formData.vehicleModel} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="vehicleTrim">Trim</Label>
+              <Label htmlFor="vehicleTrim">{t('pre_approval.vehicle_trim')}</Label>
               <Input id="vehicleTrim" name="vehicleTrim" value={formData.vehicleTrim} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ssn">Social Security Number</Label>
-              <Input id="ssn" name="ssn" placeholder="XXX-XX-XXXX" value={formData.ssn} onChange={handleInputChange} required />
+              <Label htmlFor="ssn">{t('pre_approval.ssn')}</Label>
+              <Input id="ssn" name="ssn" placeholder={t('pre_approval.ssn_placeholder')} value={formData.ssn} onChange={handleInputChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="downPayment">Down Payment ($)</Label>
+              <Label htmlFor="downPayment">{t('pre_approval.down_payment')}</Label>
               <Input id="downPayment" name="downPayment" value={formData.downPayment} onChange={handleInputChange} />
             </div>
             <div className="md:col-span-2 flex gap-4 pt-2">
               <Button type="submit" disabled={submitting} className="flex-1">
-                {submitting ? 'Submitting...' : 'Submit Application'}
+                {submitting ? t('pre_approval.submitting') : t('pre_approval.submit_application')}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/cars')}>
-                Cancel
+                {t('pre_approval.cancel')}
               </Button>
             </div>
           </form>
