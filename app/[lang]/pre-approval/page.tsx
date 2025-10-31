@@ -7,25 +7,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useTranslation } from 'react-i18next'
-import { useInitTranslation } from '@/lib/i18n/use-translation'
 import { Loader2 } from 'lucide-react'
+import { getClientI18nInstance } from '@/lib/i18n'
+import { useEffect } from 'react'
 
 // Types
 type HousingStatus = 'rent' | 'own' | 'living_with_family' | 'other'
 type EmploymentStatus = 'employed' | 'self_employed' | 'unemployed' | 'student' | 'retired'
 
 type FormValues = {
-  // Personal Information
   firstName: string
   middleName?: string
   lastName: string
   email: string
   phone: string
-  dob: string // YYYY-MM-DD
+  dob: string
   ssn: string
-
-  // Residential Information
   streetAddress: string
   unit?: string
   city: string
@@ -35,8 +32,6 @@ type FormValues = {
   monthlyHousingPayment?: string
   timeAtAddressYears?: string
   timeAtAddressMonths?: string
-
-  // Employment Information
   employmentStatus: EmploymentStatus
   employerName?: string
   jobTitle?: string
@@ -46,8 +41,6 @@ type FormValues = {
   timeAtJobMonths?: string
   otherIncomeSource?: string
   otherMonthlyIncome?: string
-
-  // Optional Vehicle Info
   vehicleYear?: string
   vehicleMake?: string
   vehicleModel?: string
@@ -61,16 +54,19 @@ export default function PreApprovalPage() {
   const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showLoading, setShowLoading] = useState(false)
-  
-  // Initialize translations for this page
-  useInitTranslation(lang, 'translation')
-  const { t } = useTranslation()
+  const [t, setT] = useState<(k: string) => string>(() => (k) => k)
+
+  // Initialize i18n on client
+  useEffect(() => {
+    (async () => {
+      const i18n = await getClientI18nInstance(lang, 'translation')
+      setT(() => i18n.t.bind(i18n))
+    })()
+  }, [lang])
 
   const onSubmit = async (data: FormValues) => {
     try {
       setIsSubmitting(true)
-      
-      // Insert into Supabase pre_approval_applications
       const res = await fetch('/api/pre-approval', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,20 +105,14 @@ export default function PreApprovalPage() {
           status: 'pending'
         })
       })
-
       if (!res.ok) throw new Error('Failed to submit application')
-      
       const result = await res.json()
-      
-      // Show loading state for ~10 seconds
       setIsSubmitting(false)
       setShowLoading(true)
-      
       setTimeout(() => {
         reset()
         router.push(`/${lang}/pre-approval/success?ref=${result.reference_number}`)
       }, 10000)
-      
     } catch (e) {
       console.error(e)
       setIsSubmitting(false)
@@ -154,7 +144,6 @@ export default function PreApprovalPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Personal Information */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName">{t('pre_approval.first_name')}</Label>
@@ -186,7 +175,6 @@ export default function PreApprovalPage() {
               </div>
             </div>
 
-            {/* Residential Information */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="streetAddress">{t('pre_approval.street_address')}</Label>
@@ -236,7 +224,6 @@ export default function PreApprovalPage() {
               </div>
             </div>
 
-            {/* Employment */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="employmentStatus">{t('pre_approval.employment_status')}</Label>
@@ -287,7 +274,6 @@ export default function PreApprovalPage() {
               </div>
             </div>
 
-            {/* Vehicle */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
               <div className="space-y-2">
                 <Label htmlFor="vehicleYear">{t('pre_approval.vehicle_year')}</Label>
