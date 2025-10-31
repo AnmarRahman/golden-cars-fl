@@ -9,9 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
-import { useTranslation } from 'react-i18next'
-import { useInitTranslation } from '@/lib/i18n/use-translation'
 import { Loader2 } from 'lucide-react'
+import { getClientI18nInstance } from '@/lib/i18n'
 
 interface Car {
   id: string
@@ -61,12 +60,17 @@ export default function CarPreApprovalPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const { lang } = params.lang as string
   const carId = params.id as string
+  const lang = params.lang as string
 
-  // Initialize translations for this page
-  useInitTranslation(lang, 'translation')
-  const { t } = useTranslation()
+  const [t, setT] = useState<(k: string) => string>(() => (k) => k)
+
+  useEffect(() => {
+    (async () => {
+      const i18n = await getClientI18nInstance(lang, 'translation')
+      setT(() => i18n.t.bind(i18n))
+    })()
+  }, [lang])
 
   const [car, setCar] = useState<Car | null>(null)
   const [loading, setLoading] = useState(true)
@@ -192,16 +196,12 @@ export default function CarPreApprovalPage() {
           vehicle_trim: formData.vehicleTrim
         })
       if (error) throw error
-      
-      // Show loading state for ~10 seconds
       setSubmitting(false)
       setShowLoading(true)
-      
       setTimeout(() => {
         toast({ title: t('pre_approval.success_title'), description: t('pre_approval.success_description') })
         router.push(`/${lang}/pre-approval/success?ref=${referenceNumber}`)
       }, 10000)
-      
     } catch (err) {
       console.error('Error submitting form:', err)
       setSubmitting(false)
