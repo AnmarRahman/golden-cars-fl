@@ -7,6 +7,9 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pre_approval_applications' AND column_name='date_of_birth') THEN
     ALTER TABLE pre_approval_applications ADD COLUMN date_of_birth date;
   END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pre_approval_applications' AND column_name='middle_name') THEN
+    ALTER TABLE pre_approval_applications ADD COLUMN middle_name text;
+  END IF;
 
   -- Address fields
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pre_approval_applications' AND column_name='street_address') THEN
