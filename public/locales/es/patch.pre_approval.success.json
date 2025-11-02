@@ -1,0 +1,17 @@
+{
+  "pre_approval": {
+    "success_title": "Nos pondremos en contacto con usted.",
+    "success_subtitle": "Gracias por enviar su solicitud",
+    "success_reference": "Número de Referencia",
+    "success_next_title": "¿Qué Sigue?",
+    "success_next_browse": "Explore nuestro inventario mientras revisamos su solicitud",
+    "success_next_schedule": "Programe una prueba de manejo para los vehículos que le interesen",
+    "success_next_complete": "Nos pondremos en contacto con los próximos pasos",
+    "success_next_email": "Recibirá un correo electrónico en breve con detalles sobre su pre-aprobación",
+    "success_browse_inventory": "Explorar Nuestro Inventario",
+    "success_return_home": "Volver al Inicio",
+    "success_contact_phone": "(813) 564-7900",
+    "success_contact_email": "goldencarsfl@gmail.com",
+    "success_contact_text": "¿Necesita ayuda? Contáctenos en"
+  }
+}
