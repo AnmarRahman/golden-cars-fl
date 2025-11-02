@@ -12,6 +12,40 @@ import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { getClientI18nInstance } from '@/lib/i18n'
 
+// Keep the FormValues in sync with the general form
+interface FormValues {
+  firstName: string
+  middleName?: string
+  lastName: string
+  email: string
+  phone: string
+  dob: string
+  ssn: string
+  streetAddress: string
+  unit?: string
+  city: string
+  state: string
+  zip: string
+  housingStatus?: string
+  monthlyHousingPayment?: string
+  timeAtAddressYears?: string
+  timeAtAddressMonths?: string
+  employmentStatus?: string
+  employerName?: string
+  jobTitle?: string
+  employerPhone?: string
+  monthlyIncome?: string
+  timeAtJobYears?: string
+  timeAtJobMonths?: string
+  otherIncomeSource?: string
+  otherMonthlyIncome?: string
+  vehicleYear?: string
+  vehicleMake?: string
+  vehicleModel?: string
+  vehicleTrim?: string
+  downPayment?: string
+}
+
 interface Car {
   id: string
   model_year: number
@@ -23,39 +57,6 @@ interface Car {
   custom_id: string | null
 }
 
-interface FormData {
-  firstName: string
-  middleName: string
-  lastName: string
-  email: string
-  phone: string
-  dateOfBirth: string
-  streetAddress: string
-  unitApt: string
-  city: string
-  state: string
-  zip: string
-  housingStatus: string
-  monthlyHousingPayment: string
-  timeAtAddressYears: string
-  timeAtAddressMonths: string
-  employmentStatus: string
-  employerName: string
-  jobTitle: string
-  employerPhone: string
-  timeAtJobYears: string
-  timeAtJobMonths: string
-  monthlyIncome: string
-  otherIncomeSource: string
-  otherMonthlyIncome: string
-  vehicleYear: string
-  vehicleMake: string
-  vehicleModel: string
-  vehicleTrim: string
-  downPayment: string
-  ssn: string
-}
-
 export default function CarPreApprovalPage() {
   const params = useParams()
   const router = useRouter()
@@ -64,7 +65,6 @@ export default function CarPreApprovalPage() {
   const lang = params.lang as string
 
   const [t, setT] = useState<(k: string) => string>(() => (k) => k)
-
   useEffect(() => {
     (async () => {
       const i18n = await getClientI18nInstance(lang, 'translation')
@@ -75,18 +75,19 @@ export default function CarPreApprovalPage() {
   const [car, setCar] = useState<Car | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showLoading, setShowLoading] = useState(false)
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<FormValues>({
     firstName: '',
     middleName: '',
     lastName: '',
     email: '',
     phone: '',
-    dateOfBirth: '',
+    dob: '',
+    ssn: '',
     streetAddress: '',
-    unitApt: '',
+    unit: '',
     city: '',
     state: '',
     zip: '',
@@ -98,19 +99,19 @@ export default function CarPreApprovalPage() {
     employerName: '',
     jobTitle: '',
     employerPhone: '',
+    monthlyIncome: '',
     timeAtJobYears: '',
     timeAtJobMonths: '',
-    monthlyIncome: '',
     otherIncomeSource: '',
     otherMonthlyIncome: '',
     vehicleYear: '',
     vehicleMake: '',
     vehicleModel: '',
     vehicleTrim: '',
-    downPayment: '',
-    ssn: ''
+    downPayment: ''
   })
 
+  // Fetch car and preset vehicle fields
   useEffect(() => {
     const fetchCarDetails = async () => {
       try {
@@ -154,57 +155,59 @@ export default function CarPreApprovalPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
+    setIsSubmitting(true)
     try {
-      const supabase = createClientClient()
       const referenceNumber = generateReferenceNumber()
+      const supabase = createClientClient()
       const { error } = await supabase
         .from('pre_approval_applications')
         .insert({
           reference_number: referenceNumber,
           car_id: carId,
           first_name: formData.firstName,
+          middle_name: formData.middleName,
           last_name: formData.lastName,
           email: formData.email,
           phone: formData.phone,
+          date_of_birth: formData.dob,
           ssn: formData.ssn,
-          down_payment: parseFloat(formData.downPayment || '0'),
-          employment_status: formData.employmentStatus,
-          monthly_income: parseFloat(formData.monthlyIncome || '0'),
-          status: 'pending',
-          middle_name: formData.middleName,
-          date_of_birth: formData.dateOfBirth,
           street_address: formData.streetAddress,
-          unit_apt: formData.unitApt,
+          unit_apt: formData.unit,
           city: formData.city,
           state: formData.state,
           zip: formData.zip,
           housing_status: formData.housingStatus,
-          monthly_housing_payment: parseFloat(formData.monthlyHousingPayment.replace(/[^0-9.]/g, '') || '0'),
+          monthly_housing_payment: formData.monthlyHousingPayment,
           time_at_address_years: formData.timeAtAddressYears,
           time_at_address_months: formData.timeAtAddressMonths,
+          employment_status: formData.employmentStatus,
           employer_name: formData.employerName,
           job_title: formData.jobTitle,
           employer_phone: formData.employerPhone,
+          monthly_income: formData.monthlyIncome,
           time_at_job_years: formData.timeAtJobYears,
           time_at_job_months: formData.timeAtJobMonths,
           other_income_source: formData.otherIncomeSource,
-          other_monthly_income: parseFloat(formData.otherMonthlyIncome.replace(/[^0-9.]/g, '') || '0'),
+          other_monthly_income: formData.otherMonthlyIncome,
           vehicle_year: formData.vehicleYear,
           vehicle_make: formData.vehicleMake,
           vehicle_model: formData.vehicleModel,
-          vehicle_trim: formData.vehicleTrim
+          vehicle_trim: formData.vehicleTrim,
+          down_payment: formData.downPayment,
+          status: 'pending'
         })
       if (error) throw error
-      setSubmitting(false)
+
+      // Match general form: show loading then redirect
+      setIsSubmitting(false)
       setShowLoading(true)
       setTimeout(() => {
-        toast({ title: t('pre_approval.success_title'), description: t('pre_approval.success_description') })
+        toast({ title: t('pre_approval.success_title') })
         router.push(`/${lang}/pre-approval/success?ref=${referenceNumber}`)
       }, 10000)
     } catch (err) {
       console.error('Error submitting form:', err)
-      setSubmitting(false)
+      setIsSubmitting(false)
       toast({ title: t('pre_approval.error_title'), description: t('pre_approval.error_description'), variant: 'destructive' })
     }
   }
@@ -281,6 +284,7 @@ export default function CarPreApprovalPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Personal */}
             <div className="space-y-2">
               <Label htmlFor="firstName">{t('pre_approval.first_name')}</Label>
               <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
@@ -294,8 +298,8 @@ export default function CarPreApprovalPage() {
               <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">{t('pre_approval.date_of_birth')}</Label>
-              <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleInputChange} />
+              <Label htmlFor="dob">{t('pre_approval.date_of_birth')}</Label>
+              <Input id="dob" name="dob" type="date" value={formData.dob} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t('pre_approval.email')}</Label>
@@ -305,13 +309,15 @@ export default function CarPreApprovalPage() {
               <Label htmlFor="phone">{t('pre_approval.phone')}</Label>
               <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required />
             </div>
+
+            {/* Address */}
             <div className="space-y-2">
               <Label htmlFor="streetAddress">{t('pre_approval.street_address')}</Label>
               <Input id="streetAddress" name="streetAddress" value={formData.streetAddress} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unitApt">{t('pre_approval.unit_apt')}</Label>
-              <Input id="unitApt" name="unitApt" value={formData.unitApt} onChange={handleInputChange} />
+              <Label htmlFor="unit">{t('pre_approval.unit_apt')}</Label>
+              <Input id="unit" name="unit" value={formData.unit} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="city">{t('pre_approval.city')}</Label>
@@ -325,6 +331,8 @@ export default function CarPreApprovalPage() {
               <Label htmlFor="zip">{t('pre_approval.zip')}</Label>
               <Input id="zip" name="zip" value={formData.zip} onChange={handleInputChange} />
             </div>
+
+            {/* Housing */}
             <div className="space-y-2">
               <Label htmlFor="housingStatus">{t('pre_approval.housing_status')}</Label>
               <Input id="housingStatus" name="housingStatus" value={formData.housingStatus} onChange={handleInputChange} />
@@ -341,6 +349,8 @@ export default function CarPreApprovalPage() {
               <Label htmlFor="timeAtAddressMonths">{t('pre_approval.time_at_address_months')}</Label>
               <Input id="timeAtAddressMonths" name="timeAtAddressMonths" value={formData.timeAtAddressMonths} onChange={handleInputChange} />
             </div>
+
+            {/* Employment */}
             <div className="space-y-2">
               <Label htmlFor="employmentStatus">{t('pre_approval.employment_status')}</Label>
               <Input id="employmentStatus" name="employmentStatus" value={formData.employmentStatus} onChange={handleInputChange} />
@@ -358,16 +368,16 @@ export default function CarPreApprovalPage() {
               <Input id="employerPhone" name="employerPhone" value={formData.employerPhone} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="monthlyIncome">{t('pre_approval.monthly_income')}</Label>
+              <Input id="monthlyIncome" name="monthlyIncome" value={formData.monthlyIncome} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="timeAtJobYears">{t('pre_approval.time_at_job_years')}</Label>
               <Input id="timeAtJobYears" name="timeAtJobYears" value={formData.timeAtJobYears} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="timeAtJobMonths">{t('pre_approval.time_at_job_months')}</Label>
               <Input id="timeAtJobMonths" name="timeAtJobMonths" value={formData.timeAtJobMonths} onChange={handleInputChange} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="monthlyIncome">{t('pre_approval.monthly_income')}</Label>
-              <Input id="monthlyIncome" name="monthlyIncome" value={formData.monthlyIncome} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="otherIncomeSource">{t('pre_approval.other_income_source')}</Label>
@@ -377,6 +387,8 @@ export default function CarPreApprovalPage() {
               <Label htmlFor="otherMonthlyIncome">{t('pre_approval.other_monthly_income')}</Label>
               <Input id="otherMonthlyIncome" name="otherMonthlyIncome" value={formData.otherMonthlyIncome} onChange={handleInputChange} />
             </div>
+
+            {/* Vehicle */}
             <div className="space-y-2">
               <Label htmlFor="vehicleYear">{t('pre_approval.vehicle_year')}</Label>
               <Input id="vehicleYear" name="vehicleYear" value={formData.vehicleYear} onChange={handleInputChange} />
@@ -394,16 +406,13 @@ export default function CarPreApprovalPage() {
               <Input id="vehicleTrim" name="vehicleTrim" value={formData.vehicleTrim} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ssn">{t('pre_approval.ssn')}</Label>
-              <Input id="ssn" name="ssn" placeholder={t('pre_approval.ssn_placeholder')} value={formData.ssn} onChange={handleInputChange} required />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="downPayment">{t('pre_approval.down_payment')}</Label>
               <Input id="downPayment" name="downPayment" value={formData.downPayment} onChange={handleInputChange} />
             </div>
+
             <div className="md:col-span-2 flex gap-4 pt-2">
-              <Button type="submit" disabled={submitting} className="flex-1">
-                {submitting ? t('pre_approval.submitting') : t('pre_approval.submit_application')}
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {isSubmitting ? t('pre_approval.submitting') : t('pre_approval.submit_application')}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/cars')}>
                 {t('pre_approval.cancel')}
