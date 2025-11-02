@@ -10,7 +10,8 @@ import {
   handleUpdateCarStatus,
   handleUpdateCar,
 } from "@/actions/admin-actions"
-import { generateCarPDF } from "@/actions/pdf-actions" // New import
+import { generateCarPDF } from "@/actions/pdf-actions"
+import PreApprovalManager from "@/components/pre-approval-manager"
 
 interface Car {
   id: string
@@ -99,20 +100,25 @@ export default async function AdminDashboardPage({
   const initialMostVisitedCars = (mostVisitedCarsData || []) as MostVisitedCarStat[]
 
   return (
-    <AdminDashboardClient
-      lang={lang}
-      status={status}
-      message={message}
-      initialCars={initialCars}
-      initialEnquiries={initialEnquiries}
-      initialMostVisitedCars={initialMostVisitedCars}
-      handleChangePassword={handleChangePassword}
-      handleLogout={handleLogout}
-      handleDeleteCar={handleDeleteCar}
-      handleAddCar={handleAddCar}
-      handleUpdateCarStatus={handleUpdateCarStatus}
-      handleUpdateCar={handleUpdateCar}
-      generateCarPDF={generateCarPDF} // New prop
-    />
+    <>
+      <AdminDashboardClient
+        lang={lang}
+        status={status}
+        message={message}
+        initialCars={initialCars}
+        initialEnquiries={initialEnquiries}
+        initialMostVisitedCars={initialMostVisitedCars}
+        handleChangePassword={handleChangePassword}
+        handleLogout={handleLogout}
+        handleDeleteCar={handleDeleteCar}
+        handleAddCar={handleAddCar}
+        handleUpdateCarStatus={handleUpdateCarStatus}
+        handleUpdateCar={handleUpdateCar}
+        generateCarPDF={generateCarPDF}
+      />
+      <div className="container mx-auto py-8">
+        <PreApprovalManager lang={lang} />
+      </div>
+    </>
   )
 }
