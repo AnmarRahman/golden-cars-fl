@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -9,9 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 import { getClientI18nInstance } from '@/lib/i18n'
-import { useEffect } from 'react'
 
-// Types
+// Shared types
 type HousingStatus = 'rent' | 'own' | 'living_with_family' | 'other'
 type EmploymentStatus = 'employed' | 'self_employed' | 'unemployed' | 'student' | 'retired'
 
@@ -56,7 +55,6 @@ export default function PreApprovalPage() {
   const [showLoading, setShowLoading] = useState(false)
   const [t, setT] = useState<(k: string) => string>(() => (k) => k)
 
-  // Initialize i18n on client
   useEffect(() => {
     (async () => {
       const i18n = await getClientI18nInstance(lang, 'translation')
@@ -144,64 +142,26 @@ export default function PreApprovalPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* personal */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">{t('pre_approval.first_name')}</Label>
-                <Input id="firstName" placeholder="John" {...register('firstName', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="middleName">{t('pre_approval.middle_name')}</Label>
-                <Input id="middleName" placeholder="A." {...register('middleName')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">{t('pre_approval.last_name')}</Label>
-                <Input id="lastName" placeholder="Doe" {...register('lastName', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('pre_approval.email')}</Label>
-                <Input id="email" type="email" placeholder="john.doe@email.com" {...register('email', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">{t('pre_approval.phone')}</Label>
-                <Input id="phone" placeholder="(555) 555-5555" {...register('phone', { required: true })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dob">{t('pre_approval.date_of_birth')}</Label>
-                <Input id="dob" type="date" {...register('dob')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ssn">{t('pre_approval.ssn')}</Label>
-                <Input id="ssn" placeholder={t('pre_approval.ssn_placeholder')} {...register('ssn', { required: true })} />
-              </div>
+              <div className="space-y-2"><Label htmlFor="firstName">{t('pre_approval.first_name')}</Label><Input id="firstName" {...register('firstName', { required: true })} /></div>
+              <div className="space-y-2"><Label htmlFor="middleName">{t('pre_approval.middle_name')}</Label><Input id="middleName" {...register('middleName')} /></div>
+              <div className="space-y-2"><Label htmlFor="lastName">{t('pre_approval.last_name')}</Label><Input id="lastName" {...register('lastName', { required: true })} /></div>
+              <div className="space-y-2"><Label htmlFor="email">{t('pre_approval.email')}</Label><Input id="email" type="email" {...register('email', { required: true })} /></div>
+              <div className="space-y-2"><Label htmlFor="phone">{t('pre_approval.phone')}</Label><Input id="phone" {...register('phone', { required: true })} /></div>
+              <div className="space-y-2"><Label htmlFor="dob">{t('pre_approval.date_of_birth')}</Label><Input id="dob" type="date" {...register('dob')} /></div>
+              <div className="space-y-2"><Label htmlFor="ssn">{t('pre_approval.ssn')}</Label><Input id="ssn" placeholder={t('pre_approval.ssn_placeholder')} {...register('ssn', { required: true })} /></div>
             </div>
-
+            {/* address */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="streetAddress">{t('pre_approval.street_address')}</Label>
-                <Input id="streetAddress" placeholder="123 Main St" {...register('streetAddress')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit">{t('pre_approval.unit_apt')}</Label>
-                <Input id="unit" placeholder="Apt 4B" {...register('unit')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">{t('pre_approval.city')}</Label>
-                <Input id="city" placeholder="Orlando" {...register('city')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">{t('pre_approval.state')}</Label>
-                <Input id="state" placeholder="FL" {...register('state')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zip">{t('pre_approval.zip')}</Label>
-                <Input id="zip" placeholder="32801" {...register('zip')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="housingStatus">{t('pre_approval.housing_status')}</Label>
-                <Select onValueChange={(value) => setValue('housingStatus', value as HousingStatus)}>
-                  <SelectTrigger id="housingStatus">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
+              <div className="space-y-2"><Label htmlFor="streetAddress">{t('pre_approval.street_address')}</Label><Input id="streetAddress" {...register('streetAddress')} /></div>
+              <div className="space-y-2"><Label htmlFor="unit">{t('pre_approval.unit_apt')}</Label><Input id="unit" {...register('unit')} /></div>
+              <div className="space-y-2"><Label htmlFor="city">{t('pre_approval.city')}</Label><Input id="city" {...register('city')} /></div>
+              <div className="space-y-2"><Label htmlFor="state">{t('pre_approval.state')}</Label><Input id="state" {...register('state')} /></div>
+              <div className="space-y-2"><Label htmlFor="zip">{t('pre_approval.zip')}</Label><Input id="zip" {...register('zip')} /></div>
+              <div className="space-y-2"><Label htmlFor="housingStatus">{t('pre_approval.housing_status')}</Label>
+                <Select onValueChange={(v) => setValue('housingStatus', v as HousingStatus)}>
+                  <SelectTrigger id="housingStatus"><SelectValue placeholder="Select status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="rent">{t('pre_approval.housing_rent')}</SelectItem>
                     <SelectItem value="own">{t('pre_approval.housing_own')}</SelectItem>
@@ -210,27 +170,15 @@ export default function PreApprovalPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="monthlyHousingPayment">{t('pre_approval.monthly_housing_payment')}</Label>
-                <Input id="monthlyHousingPayment" placeholder="$1,550" {...register('monthlyHousingPayment')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timeAtAddressYears">{t('pre_approval.time_at_address_years')}</Label>
-                <Input id="timeAtAddressYears" placeholder="2" {...register('timeAtAddressYears')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timeAtAddressMonths">{t('pre_approval.time_at_address_months')}</Label>
-                <Input id="timeAtAddressMonths" placeholder="3" {...register('timeAtAddressMonths')} />
-              </div>
+              <div className="space-y-2"><Label htmlFor="monthlyHousingPayment">{t('pre_approval.monthly_housing_payment')}</Label><Input id="monthlyHousingPayment" {...register('monthlyHousingPayment')} /></div>
+              <div className="space-y-2"><Label htmlFor="timeAtAddressYears">{t('pre_approval.time_at_address_years')}</Label><Input id="timeAtAddressYears" {...register('timeAtAddressYears')} /></div>
+              <div className="space-y-2"><Label htmlFor="timeAtAddressMonths">{t('pre_approval.time_at_address_months')}</Label><Input id="timeAtAddressMonths" {...register('timeAtAddressMonths')} /></div>
             </div>
-
+            {/* employment */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="employmentStatus">{t('pre_approval.employment_status')}</Label>
-                <Select onValueChange={(value) => setValue('employmentStatus', value as EmploymentStatus)}>
-                  <SelectTrigger id="employmentStatus">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
+              <div className="space-y-2"><Label htmlFor="employmentStatus">{t('pre_approval.employment_status')}</Label>
+                <Select onValueChange={(v) => setValue('employmentStatus', v as EmploymentStatus)}>
+                  <SelectTrigger id="employmentStatus"><SelectValue placeholder="Select status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="employed">{t('pre_approval.employed')}</SelectItem>
                     <SelectItem value="self_employed">{t('pre_approval.self_employed')}</SelectItem>
@@ -240,70 +188,26 @@ export default function PreApprovalPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="employerName">{t('pre_approval.employer_name')}</Label>
-                <Input id="employerName" placeholder="Acme Co." {...register('employerName')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="jobTitle">{t('pre_approval.job_title')}</Label>
-                <Input id="jobTitle" placeholder="Sales Associate" {...register('jobTitle')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="employerPhone">{t('pre_approval.employer_phone')}</Label>
-                <Input id="employerPhone" placeholder="(555) 555-0101" {...register('employerPhone')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="monthlyIncome">{t('pre_approval.monthly_income')}</Label>
-                <Input id="monthlyIncome" placeholder="$3,500" {...register('monthlyIncome')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timeAtJobYears">{t('pre_approval.time_at_job_years')}</Label>
-                <Input id="timeAtJobYears" placeholder="1" {...register('timeAtJobYears')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timeAtJobMonths">{t('pre_approval.time_at_job_months')}</Label>
-                <Input id="timeAtJobMonths" placeholder="8" {...register('timeAtJobMonths')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="otherIncomeSource">{t('pre_approval.other_income_source')}</Label>
-                <Input id="otherIncomeSource" placeholder="Part-time, SSI, etc." {...register('otherIncomeSource')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="otherMonthlyIncome">{t('pre_approval.other_monthly_income')}</Label>
-                <Input id="otherMonthlyIncome" placeholder="$500" {...register('otherMonthlyIncome')} />
-              </div>
+              <div className="space-y-2"><Label htmlFor="employerName">{t('pre_approval.employer_name')}</Label><Input id="employerName" {...register('employerName')} /></div>
+              <div className="space-y-2"><Label htmlFor="jobTitle">{t('pre_approval.job_title')}</Label><Input id="jobTitle" {...register('jobTitle')} /></div>
+              <div className="space-y-2"><Label htmlFor="employerPhone">{t('pre_approval.employer_phone')}</Label><Input id="employerPhone" {...register('employerPhone')} /></div>
+              <div className="space-y-2"><Label htmlFor="monthlyIncome">{t('pre_approval.monthly_income')}</Label><Input id="monthlyIncome" {...register('monthlyIncome')} /></div>
+              <div className="space-y-2"><Label htmlFor="timeAtJobYears">{t('pre_approval.time_at_job_years')}</Label><Input id="timeAtJobYears" {...register('timeAtJobYears')} /></div>
+              <div className="space-y-2"><Label htmlFor="timeAtJobMonths">{t('pre_approval.time_at_job_months')}</Label><Input id="timeAtJobMonths" {...register('timeAtJobMonths')} /></div>
+              <div className="space-y-2"><Label htmlFor="otherIncomeSource">{t('pre_approval.other_income_source')}</Label><Input id="otherIncomeSource" {...register('otherIncomeSource')} /></div>
+              <div className="space-y-2"><Label htmlFor="otherMonthlyIncome">{t('pre_approval.other_monthly_income')}</Label><Input id="otherMonthlyIncome" {...register('otherMonthlyIncome')} /></div>
             </div>
-
+            {/* vehicle */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              <div className="space-y-2">
-                <Label htmlFor="vehicleYear">{t('pre_approval.vehicle_year')}</Label>
-                <Input id="vehicleYear" placeholder="2020" {...register('vehicleYear')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicleMake">{t('pre_approval.vehicle_make')}</Label>
-                <Input id="vehicleMake" placeholder="Toyota" {...register('vehicleMake')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicleModel">{t('pre_approval.vehicle_model')}</Label>
-                <Input id="vehicleModel" placeholder="Camry" {...register('vehicleModel')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicleTrim">{t('pre_approval.vehicle_trim')}</Label>
-                <Input id="vehicleTrim" placeholder="SE" {...register('vehicleTrim')} />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="downPayment">{t('pre_approval.down_payment')}</Label>
-                <Input id="downPayment" placeholder="$2,000" {...register('downPayment')} />
-              </div>
+              <div className="space-y-2"><Label htmlFor="vehicleYear">{t('pre_approval.vehicle_year')}</Label><Input id="vehicleYear" {...register('vehicleYear')} /></div>
+              <div className="space-y-2"><Label htmlFor="vehicleMake">{t('pre_approval.vehicle_make')}</Label><Input id="vehicleMake" {...register('vehicleMake')} /></div>
+              <div className="space-y-2"><Label htmlFor="vehicleModel">{t('pre_approval.vehicle_model')}</Label><Input id="vehicleModel" {...register('vehicleModel')} /></div>
+              <div className="space-y-2"><Label htmlFor="vehicleTrim">{t('pre_approval.vehicle_trim')}</Label><Input id="vehicleTrim" {...register('vehicleTrim')} /></div>
+              <div className="space-y-2 md:col-span-2"><Label htmlFor="downPayment">{t('pre_approval.down_payment')}</Label><Input id="downPayment" {...register('downPayment')} /></div>
             </div>
-
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => router.push('/cars')}>
-                {t('pre_approval.cancel')}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t('pre_approval.submitting') : t('pre_approval.submit_application')}
-              </Button>
+              <Button type="button" variant="outline" onClick={() => router.push('/cars')}>{t('pre_approval.cancel')}</Button>
+              <Button type="submit" disabled={isSubmitting}>{isSubmitting ? t('pre_approval.submitting') : t('pre_approval.submit_application')}</Button>
             </div>
           </form>
         </CardContent>
