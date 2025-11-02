@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createClientClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Download, FileDown } from 'lucide-react'
+import { FileDown } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { getClientI18nInstance } from '@/lib/i18n'
 
 interface PreApprovalApplication {
   id: string
@@ -56,6 +57,14 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const { toast } = useToast()
+  const [t, setT] = useState<(k: string) => string>(() => (k) => k)
+
+  useEffect(() => {
+    (async () => {
+      const i18n = await getClientI18nInstance(lang, 'translation')
+      setT(() => i18n.t.bind(i18n))
+    })()
+  }, [lang])
 
   useEffect(() => {
     fetchApplications()
@@ -74,8 +83,8 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
     } catch (error) {
       console.error('Error fetching applications:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to load pre-approval applications',
+        title: t('admin_dashboard.pre_approval_applications.error_title') || 'Error',
+        description: t('admin_dashboard.pre_approval_applications.failed_to_load') || 'Failed to load pre-approval applications',
         variant: 'destructive'
       })
     } finally {
@@ -87,39 +96,39 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
     setExporting(true)
     try {
       const headers = [
-        'Reference Number',
-        'Date Submitted', 
-        'First Name',
-        'Middle Name',
-        'Last Name',
-        'Email',
-        'Phone',
-        'Date of Birth',
-        'SSN',
-        'Street Address',
-        'Unit/Apt',
-        'City',
-        'State',
-        'ZIP',
-        'Housing Status',
-        'Monthly Housing Payment',
-        'Time at Address (Years)',
-        'Time at Address (Months)',
-        'Employment Status',
-        'Employer Name',
-        'Job Title',
-        'Employer Phone',
-        'Monthly Income',
-        'Time at Job (Years)',
-        'Time at Job (Months)',
-        'Other Income Source',
-        'Other Monthly Income',
-        'Vehicle Year',
-        'Vehicle Make',
-        'Vehicle Model',
-        'Vehicle Trim',
-        'Down Payment',
-        'Status'
+        t('admin_dashboard.pre_approval_applications.table_reference') || 'Reference Number',
+        t('admin_dashboard.user_inquiries.table_date') || 'Date Submitted',
+        t('pre_approval.first_name') || 'First Name',
+        t('pre_approval.middle_name') || 'Middle Name',
+        t('pre_approval.last_name') || 'Last Name',
+        t('admin_dashboard.user_inquiries.table_email') || 'Email',
+        t('admin_dashboard.user_inquiries.table_phone') || 'Phone',
+        t('pre_approval.date_of_birth') || 'Date of Birth',
+        t('pre_approval.ssn') || 'SSN',
+        t('pre_approval.street_address') || 'Street Address',
+        t('pre_approval.unit_apt') || 'Unit/Apt',
+        t('pre_approval.city') || 'City',
+        t('pre_approval.state') || 'State',
+        t('pre_approval.zip') || 'ZIP',
+        t('pre_approval.housing_status') || 'Housing Status',
+        t('pre_approval.monthly_housing_payment') || 'Monthly Housing Payment',
+        t('pre_approval.time_at_address_years') || 'Time at Address (Years)',
+        t('pre_approval.time_at_address_months') || 'Time at Address (Months)',
+        t('pre_approval.employment_status') || 'Employment Status',
+        t('pre_approval.employer_name') || 'Employer Name',
+        t('pre_approval.job_title') || 'Job Title',
+        t('pre_approval.employer_phone') || 'Employer Phone',
+        t('pre_approval.monthly_income') || 'Monthly Income',
+        t('pre_approval.time_at_job_years') || 'Time at Job (Years)',
+        t('pre_approval.time_at_job_months') || 'Time at Job (Months)',
+        t('pre_approval.other_income_source') || 'Other Income Source',
+        t('pre_approval.other_monthly_income') || 'Other Monthly Income',
+        t('pre_approval.vehicle_year') || 'Vehicle Year',
+        t('pre_approval.vehicle_make') || 'Make',
+        t('pre_approval.vehicle_model') || 'Model',
+        t('pre_approval.vehicle_trim') || 'Trim',
+        t('pre_approval.down_payment') || 'Down Payment',
+        t('admin_dashboard.pre_approval_applications.table_status') || 'Status'
       ]
 
       const csvContent = [
@@ -170,17 +179,11 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-
-      toast({
-        title: 'Export Successful',
-        description: `Exported ${applications.length} applications to CSV`,
-        variant: 'default'
-      })
     } catch (error) {
       console.error('Export error:', error)
       toast({
-        title: 'Export Failed',
-        description: 'Failed to export applications',
+        title: t('admin_dashboard.pre_approval_applications.export_failed') || 'Export Failed',
+        description: t('admin_dashboard.pre_approval_applications.failed_to_export') || 'Failed to export applications',
         variant: 'destructive'
       })
     } finally {
@@ -189,18 +192,21 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
   }
 
   const getStatusBadge = (status: string) => {
+    const label = status === 'approved' ? t('admin_dashboard.pre_approval_applications.status_approved') || 'Approved'
+      : status === 'rejected' ? t('admin_dashboard.pre_approval_applications.status_rejected') || 'Rejected'
+      : t('admin_dashboard.pre_approval_applications.status_pending') || 'Pending'
     const variant = status === 'approved' ? 'default' : status === 'rejected' ? 'destructive' : 'secondary'
-    return <Badge variant={variant}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+    return <Badge variant={variant}>{label}</Badge>
   }
 
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Pre-Approval Applications</CardTitle>
+          <CardTitle>{t('admin_dashboard.pre_approval_applications.title') || 'Pre-Approval Applications'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div>Loading applications...</div>
+          <div>{t('cars_page.loading_cars') || 'Loading applications...'}</div>
         </CardContent>
       </Card>
     )
@@ -211,21 +217,21 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Pre-Approval Applications</CardTitle>
+            <CardTitle>{t('admin_dashboard.pre_approval_applications.title') || 'Pre-Approval Applications'}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {applications.length} applications submitted
+              {applications.length} {t('admin_dashboard.pre_approval_applications.count_suffix') || 'applications submitted'}
             </p>
           </div>
           <Button onClick={exportToCSV} disabled={exporting || applications.length === 0}>
             {exporting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-                Exporting...
+                {t('admin_dashboard.pre_approval_applications.exporting') || 'Exporting...'}
               </>
             ) : (
               <>
                 <FileDown className="w-4 h-4 mr-2" />
-                Export CSV
+                {t('admin_dashboard.pre_approval_applications.export_csv') || 'Export CSV'}
               </>
             )}
           </Button>
@@ -237,15 +243,15 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Reference #</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Monthly Income</TableHead>
-                  <TableHead>Down Payment</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>{t('admin_dashboard.pre_approval_applications.table_reference') || 'Reference #'}</TableHead>
+                  <TableHead>{t('admin_dashboard.user_inquiries.table_name') || 'Name'}</TableHead>
+                  <TableHead>{t('admin_dashboard.user_inquiries.table_email') || 'Email'}</TableHead>
+                  <TableHead>{t('admin_dashboard.user_inquiries.table_phone') || 'Phone'}</TableHead>
+                  <TableHead>{t('cars_page.title') || 'Vehicle'}</TableHead>
+                  <TableHead>{t('admin_dashboard.pre_approval_applications.table_income') || 'Monthly Income'}</TableHead>
+                  <TableHead>{t('admin_dashboard.pre_approval_applications.table_down_payment') || 'Down Payment'}</TableHead>
+                  <TableHead>{t('admin_dashboard.pre_approval_applications.table_status') || 'Status'}</TableHead>
+                  <TableHead>{t('admin_dashboard.user_inquiries.table_date') || 'Date'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -260,7 +266,7 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
                     <TableCell>
                       {app.vehicle_year && app.vehicle_make && app.vehicle_model
                         ? `${app.vehicle_year} ${app.vehicle_make} ${app.vehicle_model}${app.vehicle_trim ? ' ' + app.vehicle_trim : ''}`
-                        : 'No vehicle specified'
+                        : (t('admin_dashboard.pre_approval_applications.no_vehicle') || 'No vehicle specified')
                       }
                     </TableCell>
                     <TableCell>{app.monthly_income ? `$${app.monthly_income}` : 'N/A'}</TableCell>
@@ -274,7 +280,7 @@ export default function PreApprovalManager({ lang }: PreApprovalManagerProps) {
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            No pre-approval applications found.
+            {t('admin_dashboard.pre_approval_applications.no_applications') || 'No pre-approval applications found.'}
           </div>
         )}
       </CardContent>
