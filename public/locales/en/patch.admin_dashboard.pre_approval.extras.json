@@ -1,0 +1,8 @@
+{
+  "admin_dashboard": {
+    "pre_approval_applications": {
+      "exporting": "Exporting...",
+      "no_vehicle": "No vehicle specified"
+    }
+  }
+}
