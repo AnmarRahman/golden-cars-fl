@@ -1,0 +1,10 @@
+{
+  "admin_dashboard": {
+    "pre_approval_applications": {
+      "count_suffix": "solicitudes enviadas",
+      "export_failed": "Error al exportar",
+      "failed_to_export": "No se pudieron exportar las solicitudes",
+      "failed_to_load": "No se pudieron cargar las solicitudes de pre-aprobación"
+    }
+  }
+}
