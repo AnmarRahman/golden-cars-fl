@@ -1,0 +1,34 @@
+{
+  "common": {
+    "loading": "Loading car details...",
+    "please_wait": "Please wait a moment while we prepare the inquiry form.",
+    "cancel": "Cancel"
+  },
+  "admin_dashboard": {
+    "pre_approval_applications": {
+      "title": "Pre-Approval Applications",
+      "description": "View and manage customer pre-approval applications.",
+      "count_suffix": "applications submitted",
+      "table_reference": "Reference #",
+      "table_name": "Name",
+      "table_email": "Email",
+      "table_phone": "Phone",
+      "table_car": "Car",
+      "table_income": "Monthly Income",
+      "table_down_payment": "Down Payment",
+      "table_status": "Status",
+      "table_date": "Date",
+      "table_actions": "Actions",
+      "export_csv": "Export CSV",
+      "export_failed": "Export Failed",
+      "failed_to_export": "Failed to export applications",
+      "no_applications": "No pre-approval applications found.",
+      "status_pending": "Pending",
+      "status_approved": "Approved",
+      "status_rejected": "Rejected",
+      "car_deleted": "Car Deleted",
+      "error_title": "Error",
+      "failed_to_load": "Failed to load pre-approval applications"
+    }
+  }
+}
